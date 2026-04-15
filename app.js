@@ -38,6 +38,10 @@ const map = L.map("map", {
   preferCanvas: true,
 }).setView([40.7128, -74.006], 11);
 
+map.createPane("choroplethPane");
+map.getPane("choroplethPane").style.zIndex = 450;
+map.getPane("choroplethPane").style.pointerEvents = "none";
+
 L.control
   .zoom({
     position: "topright",
@@ -52,6 +56,7 @@ L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
 
 const layerGroup = L.layerGroup().addTo(map);
 const choroplethLayer = L.geoJSON(null, {
+  pane: "choroplethPane",
   style: () => ({
     weight: 0.35,
     color: "rgba(51, 65, 85, 0.28)",
@@ -309,6 +314,7 @@ function featureMatchesFilters(featureRow, filters) {
 }
 
 function renderMap(rows) {
+  map.getPane("choroplethPane").style.pointerEvents = "none";
   layerGroup.clearLayers();
   choroplethLayer.clearLayers();
   map.removeLayer(choroplethLayer);
@@ -329,6 +335,7 @@ function updateLegend(mode) {
 }
 
 function renderChoropleth(features) {
+  map.getPane("choroplethPane").style.pointerEvents = "auto";
   layerGroup.clearLayers();
   choroplethLayer.clearLayers();
   choroplethLayer.addData(features);
