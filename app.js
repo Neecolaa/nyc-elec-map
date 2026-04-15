@@ -85,6 +85,58 @@ function formatPostedCycle(year) {
   return String(year + 1);
 }
 
+function normalizeSearchText(value) {
+  if (!value) {
+    return "";
+  }
+
+  const replacements = [
+    [/\bfirst\b/g, "1"],
+    [/\bsecond\b/g, "2"],
+    [/\bthird\b/g, "3"],
+    [/\bfourth\b/g, "4"],
+    [/\bfifth\b/g, "5"],
+    [/\bsixth\b/g, "6"],
+    [/\bseventh\b/g, "7"],
+    [/\beighth\b/g, "8"],
+    [/\bninth\b/g, "9"],
+    [/\btenth\b/g, "10"],
+    [/\beleventh\b/g, "11"],
+    [/\btwelfth\b/g, "12"],
+    [/\bwest\b/g, "w"],
+    [/\beast\b/g, "e"],
+    [/\bnorth\b/g, "n"],
+    [/\bsouth\b/g, "s"],
+    [/\bavenue\b/g, "ave"],
+    [/\bav\b/g, "ave"],
+    [/\bstreet\b/g, "st"],
+    [/\broad\b/g, "rd"],
+    [/\bboulevard\b/g, "blvd"],
+    [/\bplace\b/g, "pl"],
+    [/\blane\b/g, "ln"],
+    [/\bdrive\b/g, "dr"],
+    [/\bcourt\b/g, "ct"],
+    [/\bparkway\b/g, "pkwy"],
+    [/\bhighway\b/g, "hwy"],
+    [/\bterrace\b/g, "ter"],
+  ];
+
+  let normalized = value.toLowerCase();
+  normalized = normalized.replace(/[.,#/]+/g, " ");
+  normalized = normalized.replace(/\b(\d+)(st|nd|rd|th)\b/g, "$1");
+
+  for (const [pattern, replacement] of replacements) {
+    normalized = normalized.replace(pattern, replacement);
+  }
+
+  normalized = normalized.replace(/\bw\.\b/g, "w");
+  normalized = normalized.replace(/\be\.\b/g, "e");
+  normalized = normalized.replace(/\bn\.\b/g, "n");
+  normalized = normalized.replace(/\bs\.\b/g, "s");
+
+  return normalized.replace(/\s+/g, " ").trim();
+}
+
 function getMarkerStyle(row) {
   return {
     radius: 5,
@@ -192,7 +244,7 @@ function updateStats(rows) {
 function getFilters() {
   return {
     mode: viewMode.value,
-    query: searchInput.value.trim().toLowerCase(),
+    query: normalizeSearchText(searchInput.value),
     borough: boroughFilter.value,
     propertyType: propertyTypeFilter.value,
     categories: new Set(categoryCheckboxes.filter((input) => input.checked).map((input) => input.value)),
@@ -203,10 +255,10 @@ function getSearchScore(row, query) {
   if (!query) {
     return 0;
   }
-  const address = (row.address || "").toLowerCase();
-  const propertyName = (row.propertyName || "").toLowerCase();
-  const bbl = (row.bbl || "").toLowerCase();
-  const borough = (row.borough || "").toLowerCase();
+  const address = normalizeSearchText(row.address);
+  const propertyName = normalizeSearchText(row.propertyName);
+  const bbl = normalizeSearchText(row.bbl);
+  const borough = normalizeSearchText(row.borough);
 
   if (propertyName === query || address === query || bbl === query) {
     return 100;
@@ -239,7 +291,7 @@ function rowMatchesFilters(row, filters) {
   if (!filters.query) {
     return true;
   }
-  const haystack = [row.address, row.propertyName, row.borough, row.bbl].join(" ").toLowerCase();
+  const haystack = normalizeSearchText([row.address, row.propertyName, row.borough, row.bbl].join(" "));
   return haystack.includes(filters.query);
 }
 
