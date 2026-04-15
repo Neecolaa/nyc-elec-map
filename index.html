@@ -30,25 +30,31 @@
           </p>
         </div>
 
-        <section class="panel stats-panel">
-          <h2>Snapshot</h2>
-          <div class="stats-grid">
-            <div class="stat-card">
-              <span class="stat-label">Visible Buildings</span>
-              <strong id="visible-count">0</strong>
-            </div>
-            <div class="stat-card">
-              <span class="stat-label">Official LL33</span>
-              <strong id="ll33-count">0</strong>
-            </div>
-            <div class="stat-card">
-              <span class="stat-label">Derived LL84</span>
-              <strong id="derived-count">0</strong>
-            </div>
-            <div class="stat-card">
-              <span class="stat-label">No Score</span>
-              <strong id="no-score-count">0</strong>
-            </div>
+        <section class="panel legend-panel">
+          <h2>Legend</h2>
+          <div class="legend-list">
+            <div class="legend-row"><span class="swatch swatch-a"></span> Grade A</div>
+            <div class="legend-row"><span class="swatch swatch-b"></span> Grade B</div>
+            <div class="legend-row"><span class="swatch swatch-c"></span> Grade C</div>
+            <div class="legend-row"><span class="swatch swatch-d"></span> Grade D</div>
+            <div class="legend-row"><span class="swatch swatch-f"></span> Grade F</div>
+            <div class="legend-row"><span class="swatch swatch-none"></span> Benchmarked, no score</div>
+          </div>
+          <p class="legend-note">
+            Marker border color distinguishes official LL33 grades from LL84-derived grades.
+          </p>
+          <div class="legend-list choropleth-legend">
+            <div class="legend-row"><span class="swatch swatch-ghg-1"></span> Lower GHG emissions</div>
+            <div class="legend-row"><span class="swatch swatch-ghg-2"></span> Moderate GHG emissions</div>
+            <div class="legend-row"><span class="swatch swatch-ghg-3"></span> Higher GHG emissions</div>
+            <div class="legend-row"><span class="swatch swatch-ghg-4"></span> Highest GHG emissions</div>
+          </div>
+        </section>
+
+        <section class="panel details-panel">
+          <h2>Details</h2>
+          <div id="details-content" class="details-empty">
+            Select a building on the map to inspect its grade source, ENERGY STAR score, and energy metrics.
           </div>
         </section>
 
@@ -89,31 +95,25 @@
           </fieldset>
         </section>
 
-        <section class="panel legend-panel">
-          <h2>Legend</h2>
-          <div class="legend-list">
-            <div class="legend-row"><span class="swatch swatch-a"></span> Grade A</div>
-            <div class="legend-row"><span class="swatch swatch-b"></span> Grade B</div>
-            <div class="legend-row"><span class="swatch swatch-c"></span> Grade C</div>
-            <div class="legend-row"><span class="swatch swatch-d"></span> Grade D</div>
-            <div class="legend-row"><span class="swatch swatch-f"></span> Grade F</div>
-            <div class="legend-row"><span class="swatch swatch-none"></span> Benchmarked, no score</div>
-          </div>
-          <p class="legend-note">
-            Marker border color distinguishes official LL33 grades from LL84-derived grades.
-          </p>
-          <div class="legend-list choropleth-legend">
-            <div class="legend-row"><span class="swatch swatch-ghg-1"></span> Lower GHG emissions</div>
-            <div class="legend-row"><span class="swatch swatch-ghg-2"></span> Moderate GHG emissions</div>
-            <div class="legend-row"><span class="swatch swatch-ghg-3"></span> Higher GHG emissions</div>
-            <div class="legend-row"><span class="swatch swatch-ghg-4"></span> Highest GHG emissions</div>
-          </div>
-        </section>
-
-        <section class="panel details-panel">
-          <h2>Details</h2>
-          <div id="details-content" class="details-empty">
-            Select a building on the map to inspect its grade source, ENERGY STAR score, and energy metrics.
+        <section class="panel stats-panel">
+          <h2>Snapshot</h2>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <span class="stat-label">Visible Buildings</span>
+              <strong id="visible-count">0</strong>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Official LL33</span>
+              <strong id="ll33-count">0</strong>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Derived LL84</span>
+              <strong id="derived-count">0</strong>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">No Score</span>
+              <strong id="no-score-count">0</strong>
+            </div>
           </div>
         </section>
       </aside>
