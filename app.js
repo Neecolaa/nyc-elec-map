@@ -175,10 +175,19 @@ function populateSelect(select, values, placeholder) {
 }
 
 function makePopupHtml(row) {
+  const grade = row.displayGrade || "Not available";
+  const ghgValue =
+    row.ll84TotalGhgEmissions ?? row.ghg ?? row.ll84_total_ghg_emissions_mtco2e ?? null;
+  const ghg = ghgValue !== null && ghgValue !== undefined
+    ? `${formatNumber(ghgValue, { maximumFractionDigits: 1 })} tCO2e`
+    : "Not available";
+
   return `
     <div>
       <p class="popup-title">${row.address || row.propertyName || "Unknown address"}</p>
       <p class="popup-subtitle">${row.borough || "Unknown borough"} · ${categoryLabels[row.mapCategory]}</p>
+      <p class="popup-subtitle">Grade: ${grade}</p>
+      <p class="popup-subtitle">GHG: ${ghg}</p>
     </div>
   `;
 }
