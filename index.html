@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NYC Energy Map</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Fraunces:opsz,wght@9..144,600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <aside class="sidebar">
+        <div class="hero">
+          <p class="eyebrow">New York City Building Performance</p>
+          <h1>Energy Grades Map</h1>
+          <p class="intro">
+            Official LL33 grades where available, plus LL84-based fallback grading for benchmarked buildings that do not
+            appear in LL33.
+          </p>
+        </div>
+
+        <section class="panel stats-panel">
+          <h2>Snapshot</h2>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <span class="stat-label">Visible Buildings</span>
+              <strong id="visible-count">0</strong>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Official LL33</span>
+              <strong id="ll33-count">0</strong>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Derived LL84</span>
+              <strong id="derived-count">0</strong>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">No Score</span>
+              <strong id="no-score-count">0</strong>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel filters-panel">
+          <h2>Filters</h2>
+          <label class="field">
+            <span>Map view</span>
+            <select id="view-mode">
+              <option value="points">Grades and benchmark points</option>
+              <option value="ghg">GHG parcel choropleth</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Search address or property</span>
+            <input id="search-input" type="search" placeholder="Try 136 West 21st Street" />
+          </label>
+
+          <label class="field">
+            <span>Borough</span>
+            <select id="borough-filter">
+              <option value="all">All boroughs</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Property type</span>
+            <select id="property-type-filter">
+              <option value="all">All property types</option>
+            </select>
+          </label>
+
+          <fieldset class="toggle-group">
+            <legend>Data categories</legend>
+            <label><input type="checkbox" value="ll33_graded" checked /> Official LL33 grade</label>
+            <label><input type="checkbox" value="ll84_scored_no_ll33" checked /> LL84 scored, no LL33 match</label>
+            <label><input type="checkbox" value="ll84_benchmarked_no_score" checked /> LL84 benchmarked, no score</label>
+          </fieldset>
+        </section>
+
+        <section class="panel legend-panel">
+          <h2>Legend</h2>
+          <div class="legend-list">
+            <div class="legend-row"><span class="swatch swatch-a"></span> Grade A</div>
+            <div class="legend-row"><span class="swatch swatch-b"></span> Grade B</div>
+            <div class="legend-row"><span class="swatch swatch-c"></span> Grade C</div>
+            <div class="legend-row"><span class="swatch swatch-d"></span> Grade D</div>
+            <div class="legend-row"><span class="swatch swatch-f"></span> Grade F</div>
+            <div class="legend-row"><span class="swatch swatch-none"></span> Benchmarked, no score</div>
+          </div>
+          <p class="legend-note">
+            Marker border color distinguishes official LL33 grades from LL84-derived grades.
+          </p>
+          <div class="legend-list choropleth-legend">
+            <div class="legend-row"><span class="swatch swatch-ghg-1"></span> Lower GHG emissions</div>
+            <div class="legend-row"><span class="swatch swatch-ghg-2"></span> Moderate GHG emissions</div>
+            <div class="legend-row"><span class="swatch swatch-ghg-3"></span> Higher GHG emissions</div>
+            <div class="legend-row"><span class="swatch swatch-ghg-4"></span> Highest GHG emissions</div>
+          </div>
+        </section>
+
+        <section class="panel details-panel">
+          <h2>Details</h2>
+          <div id="details-content" class="details-empty">
+            Select a building on the map to inspect its grade source, ENERGY STAR score, and energy metrics.
+          </div>
+        </section>
+      </aside>
+
+      <main class="map-shell">
+        <div id="map"></div>
+      </main>
+    </div>
+
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
