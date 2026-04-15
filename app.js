@@ -195,6 +195,33 @@ function getFilters() {
   };
 }
 
+function getSearchScore(row, query) {
+  if (!query) {
+    return 0;
+  }
+  const address = (row.address || "").toLowerCase();
+  const propertyName = (row.propertyName || "").toLowerCase();
+  const bbl = (row.bbl || "").toLowerCase();
+  const borough = (row.borough || "").toLowerCase();
+
+  if (propertyName === query || address === query || bbl === query) {
+    return 100;
+  }
+  if (propertyName.startsWith(query) || address.startsWith(query)) {
+    return 80;
+  }
+  if (propertyName.includes(query)) {
+    return 60;
+  }
+  if (address.includes(query)) {
+    return 40;
+  }
+  if (borough.includes(query) || bbl.includes(query)) {
+    return 20;
+  }
+  return 0;
+}
+
 function rowMatchesFilters(row, filters) {
   if (!filters.categories.has(row.mapCategory)) {
     return false;
@@ -266,8 +293,20 @@ function renderChoropleth(features) {
 
 function applyFilters({ fitBounds = false } = {}) {
   const filters = getFilters();
-  const visibleRows = state.allRows.filter((row) => rowMatchesFilters(row, filters));
-  const visibleFeatures = state.choroplethFeatures.filter((featureRow) => featureMatchesFilters(featureRow, filters));
+  let visibleRows = state.allRows.filter((row) => rowMatchesFilters(row, filters));
+  let visibleFeatures = state.choroplethFeatures.filter((featureRow) => featureMatchesFilters(featureRow, filters));
+
+  if (filters.query) {
+    visibleRows = visibleRows
+      .map((row) => ({ row, score: getSearchScore(row, filters.query) }))
+      .sort((a, b) => b.score - a.score)
+      .map((item) => item.row);
+
+    visibleFeatures = visibleFeatures
+      .map((item) => ({ item, score: getSearchScore(item, filters.query) }))
+      .sort((a, b) => b.score - a.score)
+      .map((entry) => entry.item);
+  }
   state.visibleRows = visibleRows;
   state.visibleChoroplethFeatures = visibleFeatures;
   if (filters.mode === "ghg") {
@@ -278,12 +317,17 @@ function applyFilters({ fitBounds = false } = {}) {
     updateStats(visibleRows);
   }
 
+  const shouldFit = fitBounds || Boolean(filters.query);
+  const focusRows =
+    filters.mode === "ghg"
+      ? visibleFeatures.slice(0, 12).map((item) => item.feature)
+      : visibleRows.slice(0, 12);
   const boundsRows = filters.mode === "ghg" ? visibleFeatures.map((item) => item.feature) : visibleRows;
-  if (fitBounds && boundsRows.length) {
+  if (shouldFit && boundsRows.length) {
     const bounds =
       filters.mode === "ghg"
-        ? choroplethLayer.getBounds()
-        : L.latLngBounds(visibleRows.map((row) => [row.latitude, row.longitude]));
+        ? L.geoJSON(focusRows).getBounds()
+        : L.latLngBounds(focusRows.map((row) => [row.latitude, row.longitude]));
     map.fitBounds(bounds.pad(0.04));
   }
 }
