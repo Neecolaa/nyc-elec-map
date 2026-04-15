@@ -194,6 +194,10 @@ body {
   line-height: 1.45;
 }
 
+.is-hidden {
+  display: none;
+}
+
 .swatch {
   width: 14px;
   height: 14px;

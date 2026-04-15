@@ -32,7 +32,7 @@
 
         <section class="panel legend-panel">
           <h2>Legend</h2>
-          <div class="legend-list">
+          <div id="grade-legend" class="legend-list">
             <div class="legend-row"><span class="swatch swatch-a"></span> Grade A</div>
             <div class="legend-row"><span class="swatch swatch-b"></span> Grade B</div>
             <div class="legend-row"><span class="swatch swatch-c"></span> Grade C</div>
@@ -40,15 +40,18 @@
             <div class="legend-row"><span class="swatch swatch-f"></span> Grade F</div>
             <div class="legend-row"><span class="swatch swatch-none"></span> Benchmarked, no score</div>
           </div>
-          <p class="legend-note">
+          <p id="grade-legend-note" class="legend-note">
             Marker border color distinguishes official LL33 grades from LL84-derived grades.
           </p>
-          <div class="legend-list choropleth-legend">
+          <div id="ghg-legend" class="legend-list choropleth-legend">
             <div class="legend-row"><span class="swatch swatch-ghg-1"></span> Lower GHG emissions</div>
             <div class="legend-row"><span class="swatch swatch-ghg-2"></span> Moderate GHG emissions</div>
             <div class="legend-row"><span class="swatch swatch-ghg-3"></span> Higher GHG emissions</div>
             <div class="legend-row"><span class="swatch swatch-ghg-4"></span> Highest GHG emissions</div>
           </div>
+          <p id="ghg-legend-note" class="legend-note">
+            Parcel fill color shows the latest available LL84 location-based GHG emissions for that BBL.
+          </p>
         </section>
 
         <section class="panel filters-panel">

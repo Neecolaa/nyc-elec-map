@@ -66,6 +66,10 @@ const boroughFilter = document.getElementById("borough-filter");
 const propertyTypeFilter = document.getElementById("property-type-filter");
 const categoryCheckboxes = Array.from(document.querySelectorAll('.toggle-group input[type="checkbox"]'));
 const detailsContent = document.getElementById("details-content");
+const gradeLegend = document.getElementById("grade-legend");
+const gradeLegendNote = document.getElementById("grade-legend-note");
+const ghgLegend = document.getElementById("ghg-legend");
+const ghgLegendNote = document.getElementById("ghg-legend-note");
 
 function formatNumber(value, options = {}) {
   if (value === null || value === undefined || value === "") {
@@ -255,6 +259,14 @@ function renderMap(rows) {
   }
 }
 
+function updateLegend(mode) {
+  const showGhg = mode === "ghg";
+  gradeLegend.classList.toggle("is-hidden", showGhg);
+  gradeLegendNote.classList.toggle("is-hidden", showGhg);
+  ghgLegend.classList.toggle("is-hidden", !showGhg);
+  ghgLegendNote.classList.toggle("is-hidden", !showGhg);
+}
+
 function renderChoropleth(features) {
   layerGroup.clearLayers();
   choroplethLayer.clearLayers();
@@ -316,6 +328,7 @@ function applyFilters({ fitBounds = false } = {}) {
     renderMap(visibleRows);
     updateStats(visibleRows);
   }
+  updateLegend(filters.mode);
 
   const shouldFit = fitBounds || Boolean(filters.query);
   const focusRows =
