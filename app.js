@@ -209,6 +209,7 @@ function normalizeFeature(feature) {
   return {
     bbl: props.bbl,
     address: props.address,
+    searchAliases: parseSearchAliases(props.address_aliases),
     borough: props.borough,
     mapCategory: props.map_category,
     displayGrade: props.display_grade,
@@ -217,6 +218,16 @@ function normalizeFeature(feature) {
     ghg: props.ll84_total_ghg_emissions_mtco2e,
     feature,
   };
+}
+
+function parseSearchAliases(value) {
+  if (Array.isArray(value)) {
+    return value.filter(Boolean);
+  }
+  return String(value || "")
+    .split("|")
+    .map((part) => part.trim())
+    .filter(Boolean);
 }
 
 function renderDetails(row) {
@@ -272,28 +283,62 @@ function getFilters() {
   };
 }
 
+function escapeRegex(value) {
+  return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function hasDigit(value) {
+  return /\d/.test(value || "");
+}
+
+function matchesSearchText(text, query) {
+  if (!query) {
+    return true;
+  }
+  const normalizedText = normalizeSearchText(text);
+  if (!normalizedText) {
+    return false;
+  }
+  if (normalizedText === query) {
+    return true;
+  }
+  if (normalizedText.startsWith(query)) {
+    return true;
+  }
+  if (!hasDigit(query)) {
+    return normalizedText.includes(query);
+  }
+  const tokenPattern = new RegExp(`(^|\\D)${escapeRegex(query)}(\\D|$)`);
+  return tokenPattern.test(normalizedText);
+}
+
 function getSearchScore(row, query) {
   if (!query) {
     return 0;
   }
   const address = normalizeSearchText(row.address);
+  const aliases = (row.searchAliases || []).map((alias) => normalizeSearchText(alias));
   const propertyName = normalizeSearchText(row.propertyName);
   const bbl = normalizeSearchText(row.bbl);
   const borough = normalizeSearchText(row.borough);
 
-  if (propertyName === query || address === query || bbl === query) {
+  if (propertyName === query || address === query || bbl === query || aliases.includes(query)) {
     return 100;
   }
-  if (propertyName.startsWith(query) || address.startsWith(query)) {
+  if (
+    propertyName.startsWith(query) ||
+    address.startsWith(query) ||
+    aliases.some((alias) => alias.startsWith(query))
+  ) {
     return 80;
   }
-  if (propertyName.includes(query)) {
+  if (matchesSearchText(propertyName, query)) {
     return 60;
   }
-  if (address.includes(query)) {
+  if (matchesSearchText(address, query) || aliases.some((alias) => matchesSearchText(alias, query))) {
     return 40;
   }
-  if (borough.includes(query) || bbl.includes(query)) {
+  if (matchesSearchText(borough, query) || matchesSearchText(bbl, query)) {
     return 20;
   }
   return 0;
@@ -312,8 +357,9 @@ function rowMatchesFilters(row, filters) {
   if (!filters.query) {
     return true;
   }
-  const haystack = normalizeSearchText([row.address, row.propertyName, row.borough, row.bbl].join(" "));
-  return haystack.includes(filters.query);
+  return [row.address, ...(row.searchAliases || []), row.propertyName, row.borough, row.bbl].some((value) =>
+    matchesSearchText(value, filters.query)
+  );
 }
 
 function featureMatchesFilters(featureRow, filters) {
