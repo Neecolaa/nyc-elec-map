@@ -36,11 +36,10 @@
             <div class="legend-row"><span class="swatch swatch-b"></span> Grade B</div>
             <div class="legend-row"><span class="swatch swatch-c"></span> Grade C</div>
             <div class="legend-row"><span class="swatch swatch-d"></span> Grade D</div>
-            <div class="legend-row"><span class="swatch swatch-f"></span> Grade F</div>
             <div class="legend-row"><span class="swatch swatch-none"></span> Benchmarked, no score</div>
           </div>
           <p id="grade-legend-note" class="legend-note">
-            Marker border color distinguishes official LL33 grades from LL84-derived grades.
+            Grades are based on the most recent scored benchmarking year available for each building.
           </p>
           <div id="ghg-legend" class="legend-list choropleth-legend">
             <div class="legend-row"><span class="swatch swatch-ghg-1"></span> Under 150 tCO2e</div>
@@ -65,7 +64,7 @@
 
           <label class="field">
             <span>Search address or property</span>
-            <input id="search-input" type="search" placeholder="Try 136 West 21st Street" />
+            <input id="search-input" type="search" placeholder="Try 529 5th Ave" />
           </label>
 
           <label class="field">
@@ -84,9 +83,8 @@
 
           <fieldset class="toggle-group">
             <legend>Data categories</legend>
-            <label><input type="checkbox" value="ll33_graded" checked /> Official LL33 grade</label>
-            <label><input type="checkbox" value="ll84_scored_no_ll33" checked /> LL84 scored, no LL33 match</label>
-            <label><input type="checkbox" value="ll84_benchmarked_no_score" checked /> LL84 benchmarked, no score</label>
+            <label><input type="checkbox" value="ll84_scored" checked /> Scored building</label>
+            <label><input type="checkbox" value="ll84_benchmarked_no_score" checked /> Benchmarked, no score</label>
           </fieldset>
         </section>
 
@@ -98,12 +96,12 @@
               <strong id="visible-count">0</strong>
             </div>
             <div class="stat-card">
-              <span class="stat-label">Official LL33</span>
-              <strong id="ll33-count">0</strong>
+              <span class="stat-label">Scored Buildings</span>
+              <strong id="scored-count">0</strong>
             </div>
             <div class="stat-card">
-              <span class="stat-label">Derived LL84</span>
-              <strong id="derived-count">0</strong>
+              <span class="stat-label">Latest-Year Scores</span>
+              <strong id="latest-score-count">0</strong>
             </div>
             <div class="stat-card">
               <span class="stat-label">No Score</span>
@@ -118,7 +116,7 @@
         <section class="panel details-panel details-panel-bottom">
           <h2>Details</h2>
           <div id="details-content" class="details-empty">
-            Select a building on the map to inspect its grade source, ENERGY STAR score, and energy metrics.
+            Select a building on the map to inspect its grade, ENERGY STAR score, and energy metrics.
           </div>
         </section>
       </main>

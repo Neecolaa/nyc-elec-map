@@ -1,13 +1,11 @@
 const categoryLabels = {
-  ll33_graded: "Official LL33 grade",
-  ll84_scored_no_ll33: "LL84 scored, no LL33 match",
-  ll84_benchmarked_no_score: "LL84 benchmarked, no score",
+  ll84_scored: "Scored building",
+  ll84_benchmarked_no_score: "Benchmarked, no score",
 };
 
 const gradeBasisLabels = {
-  historical_ll84_last_scored: "Last scored LL84 year",
-  official_ll33: "Official LL33 grade",
-  latest_ll84_score: "Latest LL84 score",
+  historical_ll84_last_scored: "Last scored year",
+  latest_ll84_score: "Latest score",
   no_grade_available: "No grade available",
 };
 
@@ -18,12 +16,6 @@ const gradeColors = {
   D: "#ef7d32",
   F: "#c53d2f",
   "": "#98a2b3",
-};
-
-const categoryBorders = {
-  ll33_graded: "#18212f",
-  ll84_scored_no_ll33: "#0f766e",
-  ll84_benchmarked_no_score: "#667085",
 };
 
 const state = {
@@ -143,15 +135,30 @@ function normalizeSearchText(value) {
 }
 
 function getMarkerStyle(row) {
+  const fillColor = gradeColors[row.displayGrade || ""];
   return {
     radius: 5,
-    fillColor: gradeColors[row.displayGrade || ""],
-    color: categoryBorders[row.mapCategory],
-    weight: 1.4,
+    fillColor,
+    color: darkenHex(fillColor, 0.32),
+    weight: 1.1,
     opacity: 1,
     fillOpacity: 0.82,
     renderer: markerRenderer,
   };
+}
+
+function darkenHex(hex, amount) {
+  const safeHex = (hex || "#98a2b3").replace("#", "");
+  const normalized = safeHex.length === 3
+    ? safeHex.split("").map((char) => char + char).join("")
+    : safeHex;
+  const channels = normalized.match(/.{2}/g) || ["98", "a2", "b3"];
+  const darkened = channels.map((channel) => {
+    const value = parseInt(channel, 16);
+    const next = Math.max(0, Math.min(255, Math.round(value * (1 - amount))));
+    return next.toString(16).padStart(2, "0");
+  });
+  return `#${darkened.join("")}`;
 }
 
 function getChoroplethColor(value) {
@@ -219,11 +226,10 @@ function renderDetails(row) {
     <div class="details-grid">
       <div class="detail-card"><span>Display Grade</span><strong>${row.displayGrade || "Not available"}</strong></div>
       <div class="detail-card"><span>Display Grade Basis</span><strong>${gradeBasisLabels[row.displayGradeBasis] || "Not available"}</strong></div>
-      <div class="detail-card"><span>Official LL33 Grade</span><strong>${row.officialGrade || "Not available"}</strong></div>
-      <div class="detail-card"><span>Derived LL84 Grade</span><strong>${row.derivedGrade || "Not available"}</strong></div>
+      <div class="detail-card"><span>Latest Derived Grade</span><strong>${row.derivedGrade || "Not available"}</strong></div>
       <div class="detail-card"><span>Last Scored Benchmarking Year</span><strong>${row.lastScoredDerivedGrade ? `${row.lastScoredDerivedGrade} / ${row.lastScoredEnergyStarScore ?? "?"} (${row.lastScoredYear || "?"})` : "Not available"}</strong></div>
       <div class="detail-card"><span>Approx. Posted Cycle</span><strong>${row.lastScoredYear ? formatPostedCycle(row.lastScoredYear) : "Not available"}</strong></div>
-      <div class="detail-card"><span>Latest LL84 ENERGY STAR</span><strong>${row.ll84EnergyStarScore ?? "Not available"}</strong></div>
+      <div class="detail-card"><span>Latest ENERGY STAR</span><strong>${row.ll84EnergyStarScore ?? "Not available"}</strong></div>
       <div class="detail-card"><span>Property Type</span><strong>${row.propertyType || "Not available"}</strong></div>
       <div class="detail-card"><span>Latest Benchmarking Year</span><strong>${row.ll84Year || "Not available"}</strong></div>
       <div class="detail-card"><span>Weather-Normalized Site EUI</span><strong>${row.ll84WeatherNormalizedSiteEui ? formatNumber(row.ll84WeatherNormalizedSiteEui, { maximumFractionDigits: 1 }) + " kBtu/ft²" : "Not available"}</strong></div>
@@ -243,15 +249,16 @@ function updateStats(rows) {
     },
     {
       total: 0,
-      ll33_graded: 0,
-      ll84_scored_no_ll33: 0,
+      ll84_scored: 0,
       ll84_benchmarked_no_score: 0,
     }
   );
 
   document.getElementById("visible-count").textContent = formatNumber(counts.total);
-  document.getElementById("ll33-count").textContent = formatNumber(counts.ll33_graded);
-  document.getElementById("derived-count").textContent = formatNumber(counts.ll84_scored_no_ll33);
+  document.getElementById("scored-count").textContent = formatNumber(counts.ll84_scored);
+  document.getElementById("latest-score-count").textContent = formatNumber(
+    rows.filter((row) => row.ll84EnergyStarScore !== null && row.ll84EnergyStarScore !== undefined).length
+  );
   document.getElementById("no-score-count").textContent = formatNumber(counts.ll84_benchmarked_no_score);
 }
 
@@ -349,7 +356,6 @@ function renderChoropleth(features) {
       renderDetails({
         displayGrade: props.display_grade,
         displayGradeBasis: props.display_grade_basis,
-        officialGrade: props.ll33_grade || "",
         derivedGrade: props.derived_grade_from_ll84_score || "",
         lastScoredDerivedGrade: props.ll84_last_scored_derived_grade || "",
         lastScoredEnergyStarScore: props.ll84_last_scored_energy_star_score || null,
