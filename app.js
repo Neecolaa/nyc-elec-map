@@ -23,7 +23,10 @@ const state = {
   choroplethFeatures: [],
   visibleRows: [],
   visibleChoroplethFeatures: [],
+  favorites: [],
 };
+
+const FAVORITES_STORAGE_KEY = "nyc-energy-map-favorites-v1";
 
 const map = L.map("map", {
   zoomControl: false,
@@ -63,6 +66,7 @@ const boroughFilter = document.getElementById("borough-filter");
 const propertyTypeFilter = document.getElementById("property-type-filter");
 const categoryCheckboxes = Array.from(document.querySelectorAll('.toggle-group input[type="checkbox"]'));
 const detailsContent = document.getElementById("details-content");
+const favoritesContent = document.getElementById("favorites-content");
 const gradeLegend = document.getElementById("grade-legend");
 const gradeLegendNote = document.getElementById("grade-legend-note");
 const ghgLegend = document.getElementById("ghg-legend");
@@ -193,6 +197,7 @@ function makePopupHtml(row) {
   const ghg = ghgValue !== null && ghgValue !== undefined
     ? `${formatNumber(ghgValue, { maximumFractionDigits: 1 })} tCO2e`
     : "Not available";
+  const isFavorited = isFavorite(row.bbl);
 
   return `
     <div>
@@ -200,6 +205,9 @@ function makePopupHtml(row) {
       <p class="popup-subtitle">${row.borough || "Unknown borough"} · ${categoryLabels[row.mapCategory]}</p>
       <p class="popup-subtitle">Grade: ${grade}</p>
       <p class="popup-subtitle">GHG: ${ghg}</p>
+      <button class="popup-favorite-button ${isFavorited ? "is-favorited" : ""}" data-bbl="${row.bbl}">
+        ${isFavorited ? "Remove Favorite" : "Add Favorite"}
+      </button>
     </div>
   `;
 }
@@ -247,20 +255,118 @@ function parseSearchAliases(value) {
     .filter(Boolean);
 }
 
+function loadFavorites() {
+  try {
+    const raw = window.localStorage.getItem(FAVORITES_STORAGE_KEY);
+    const parsed = JSON.parse(raw || "[]");
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+    return parsed.filter((item) => item && item.bbl);
+  } catch {
+    return [];
+  }
+}
+
+function saveFavorites() {
+  window.localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(state.favorites));
+}
+
+function isFavorite(bbl) {
+  return state.favorites.some((favorite) => favorite.bbl === bbl);
+}
+
+function getRowByBbl(bbl) {
+  return state.allRows.find((row) => row.bbl === bbl) || state.choroplethFeatures.find((row) => row.bbl === bbl);
+}
+
+function buildFavoriteRecord(row) {
+  return {
+    bbl: row.bbl,
+    address: row.address || row.propertyName || "Unknown address",
+    borough: row.borough || "",
+    displayGrade: row.displayGrade || "",
+    ll84TotalGhgEmissions: row.ll84TotalGhgEmissions ?? row.ghg ?? null,
+  };
+}
+
+function toggleFavoriteByBbl(bbl) {
+  const existingIndex = state.favorites.findIndex((favorite) => favorite.bbl === bbl);
+  if (existingIndex >= 0) {
+    state.favorites.splice(existingIndex, 1);
+  } else {
+    const row = getRowByBbl(bbl);
+    if (!row) {
+      return false;
+    }
+    state.favorites.unshift(buildFavoriteRecord(row));
+  }
+  saveFavorites();
+  renderFavorites();
+  return existingIndex < 0;
+}
+
+function focusFavorite(bbl) {
+  const row = getRowByBbl(bbl);
+  if (!row) {
+    return;
+  }
+  renderDetails(row);
+  if (row.latitude !== undefined && row.longitude !== undefined) {
+    map.flyTo([row.latitude, row.longitude], Math.max(map.getZoom(), 16), { duration: 0.6 });
+  }
+}
+
+function renderFavorites() {
+  if (!state.favorites.length) {
+    favoritesContent.className = "favorites-empty";
+    favoritesContent.textContent = "No favorites yet. Use the button in a map popup to save one.";
+    return;
+  }
+
+  favoritesContent.className = "favorites-list";
+  favoritesContent.innerHTML = state.favorites
+    .map((favorite) => {
+      const grade = favorite.displayGrade || "No score";
+      const ghg =
+        favorite.ll84TotalGhgEmissions !== null && favorite.ll84TotalGhgEmissions !== undefined
+          ? `${formatNumber(favorite.ll84TotalGhgEmissions, { maximumFractionDigits: 1 })} tCO2e`
+          : "GHG unavailable";
+      return `
+        <div class="favorite-item">
+          <div>
+            <p class="favorite-item-title">${favorite.address}</p>
+            <p class="favorite-item-meta">${favorite.borough || "Unknown borough"} · Grade ${grade} · ${ghg}</p>
+          </div>
+          <div class="favorite-actions">
+            <button class="favorite-button" data-bbl="${favorite.bbl}">View</button>
+            <button class="favorite-remove" data-bbl="${favorite.bbl}">Remove</button>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+}
+
 function renderDetails(row) {
   detailsContent.innerHTML = `
     <h3 class="details-title">${row.address || row.propertyName || "Unknown address"}</h3>
     <p class="details-meta">${row.borough || "Unknown borough"} · ${categoryLabels[row.mapCategory]} · BBL ${row.bbl}</p>
     <div class="details-grid">
-      <div class="detail-card"><span>Last Scored Benchmarking Year</span><strong>${row.lastScoredDerivedGrade ? `${row.lastScoredDerivedGrade} / ${row.lastScoredEnergyStarScore ?? "?"} (${row.lastScoredYear || "?"})` : "Not available"}</strong></div>
+      <div class="detail-card"><span>Energy Efficiency Rating</span><strong>${row.lastScoredDerivedGrade ? `${row.lastScoredDerivedGrade} / ${row.lastScoredEnergyStarScore ?? "?"} (${row.lastScoredYear || "?"})` : "Not available"}</strong></div>
       <div class="detail-card"><span>Property Type</span><strong>${row.propertyType || "Not available"}</strong></div>
       <div class="detail-card"><span>GHG Emissions</span><strong>${row.ll84TotalGhgEmissions ? formatNumber(row.ll84TotalGhgEmissions, { maximumFractionDigits: 1 }) + " tCO2e" : "Not available"}</strong></div>
       <div class="detail-card"><span>Est. Yearly Energy Use</span><strong>${row.ll84EstimatedYearlyEnergyKwh ? formatNumber(row.ll84EstimatedYearlyEnergyKwh, { maximumFractionDigits: 0 }) + " kWh" : "Not available"}</strong></div>
-      <div class="detail-card"><span>Gross Floor Area</span><strong>${row.ll84PropertyGfa ? formatNumber(row.ll84PropertyGfa) + " ft²" : "Not available"}</strong></div>
-      <div class="detail-card"><span>Electricity Use</span><strong>${row.ll84ElectricityKwh ? formatNumber(row.ll84ElectricityKwh, { maximumFractionDigits: 0 }) + " kWh" : "Not available"}</strong></div>
-      <div class="detail-card"><span>Natural Gas Use</span><strong>${row.ll84NaturalGasTherms ? `${formatNumber(row.ll84NaturalGasTherms, { maximumFractionDigits: 0 })} therms (~${formatNumber(row.ll84NaturalGasTherms * 29.3001, { maximumFractionDigits: 0 })} kWh)` : "Not available"}</strong></div>
-      <div class="detail-card"><span>Weather-Normalized Site EUI</span><strong>${row.ll84WeatherNormalizedSiteEui ? formatNumber(row.ll84WeatherNormalizedSiteEui, { maximumFractionDigits: 1 }) + " kBtu/ft²" : "Not available"}</strong></div>
     </div>
+    <details class="details-more">
+      <summary>More Details</summary>
+      <div class="details-grid details-grid-more">
+        <div class="detail-card"><span>Gross Floor Area</span><strong>${row.ll84PropertyGfa ? formatNumber(row.ll84PropertyGfa) + " ft²" : "Not available"}</strong></div>
+        <div class="detail-card"><span>Electricity Use</span><strong>${row.ll84ElectricityKwh ? formatNumber(row.ll84ElectricityKwh, { maximumFractionDigits: 0 }) + " kWh" : "Not available"}</strong></div>
+        <div class="detail-card"><span>Natural Gas Use</span><strong>${row.ll84NaturalGasTherms ? `${formatNumber(row.ll84NaturalGasTherms, { maximumFractionDigits: 0 })} therms (~${formatNumber(row.ll84NaturalGasTherms * 29.3001, { maximumFractionDigits: 0 })} kWh)` : "Not available"}</strong></div>
+        <div class="detail-card"><span>Weather-Normalized Site EUI</span><strong>${row.ll84WeatherNormalizedSiteEui ? formatNumber(row.ll84WeatherNormalizedSiteEui, { maximumFractionDigits: 1 }) + " kBtu/ft²" : "Not available"}</strong></div>
+      </div>
+    </details>
   `;
 }
 
@@ -467,6 +573,7 @@ async function init() {
   state.allRows = await pointsResponse.json();
   const ghgGeojson = await ghgResponse.json();
   state.choroplethFeatures = ghgGeojson.features.map(normalizeFeature);
+  state.favorites = loadFavorites().filter((favorite) => getRowByBbl(favorite.bbl));
 
   const boroughs = [...new Set(state.allRows.map((row) => row.borough).filter(Boolean))].sort();
   const propertyTypes = [...new Set(state.allRows.map((row) => row.propertyType).filter(Boolean))].sort();
@@ -486,7 +593,31 @@ async function init() {
   boroughFilter.addEventListener("change", () => applyFilters());
   propertyTypeFilter.addEventListener("change", () => applyFilters());
   categoryCheckboxes.forEach((input) => input.addEventListener("change", () => applyFilters()));
+  map.getContainer().addEventListener("click", (event) => {
+    const popupButton = event.target.closest(".popup-favorite-button");
+    if (popupButton) {
+      event.preventDefault();
+      const isNowFavorited = toggleFavoriteByBbl(popupButton.dataset.bbl);
+      popupButton.classList.toggle("is-favorited", isNowFavorited);
+      popupButton.textContent = isNowFavorited ? "Remove Favorite" : "Add Favorite";
+    }
+  });
+  favoritesContent.addEventListener("click", (event) => {
+    const favoriteViewButton = event.target.closest(".favorite-button");
+    if (favoriteViewButton) {
+      event.preventDefault();
+      focusFavorite(favoriteViewButton.dataset.bbl);
+      return;
+    }
 
+    const favoriteRemoveButton = event.target.closest(".favorite-remove");
+    if (favoriteRemoveButton) {
+      event.preventDefault();
+      toggleFavoriteByBbl(favoriteRemoveButton.dataset.bbl);
+    }
+  });
+
+  renderFavorites();
   applyFilters({ fitBounds: true });
 }
 

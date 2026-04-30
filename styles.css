@@ -225,6 +225,10 @@ body {
   margin: 0;
 }
 
+.details-panel-bottom h2 {
+  margin-bottom: 14px;
+}
+
 .details-title {
   margin: 0 0 8px;
   font-size: 1.15rem;
@@ -240,6 +244,134 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+}
+
+.details-more {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 16px;
+  background: var(--panel-strong);
+  border: 1px solid rgba(55, 65, 81, 0.08);
+}
+
+.details-more summary {
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ink);
+  list-style: none;
+}
+
+.details-more summary::-webkit-details-marker {
+  display: none;
+}
+
+.details-more summary::after {
+  content: "+";
+  float: right;
+  color: var(--muted);
+}
+
+.details-more[open] summary::after {
+  content: "−";
+}
+
+.details-grid-more {
+  margin-top: 12px;
+}
+
+.favorites-section {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
+.favorites-header p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.favorites-empty {
+  margin-top: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.favorites-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.favorite-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 12px;
+  border-radius: 16px;
+  background: var(--panel-strong);
+  border: 1px solid rgba(55, 65, 81, 0.08);
+}
+
+.favorite-item-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.favorite-item-meta {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.favorite-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.favorite-button,
+.favorite-remove,
+.popup-favorite-button {
+  border: 1px solid rgba(15, 118, 110, 0.18);
+  background: #fff;
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 8px 12px;
+  font: inherit;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+.favorite-button:hover,
+.favorite-remove:hover,
+.popup-favorite-button:hover {
+  border-color: rgba(15, 118, 110, 0.42);
+}
+
+.favorite-button {
+  background: var(--accent-soft);
+}
+
+.favorite-remove {
+  color: var(--muted);
+}
+
+.popup-favorite-button {
+  margin-top: 10px;
+  padding: 7px 12px;
+  font-size: 0.86rem;
+}
+
+.popup-favorite-button.is-favorited {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: rgba(15, 118, 110, 0.34);
 }
 
 .detail-card {
