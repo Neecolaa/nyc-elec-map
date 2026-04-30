@@ -260,12 +260,6 @@ function renderDetails(row) {
       <div class="detail-card"><span>Electricity Use</span><strong>${row.ll84ElectricityKwh ? formatNumber(row.ll84ElectricityKwh, { maximumFractionDigits: 0 }) + " kWh" : "Not available"}</strong></div>
       <div class="detail-card"><span>Natural Gas Use</span><strong>${row.ll84NaturalGasTherms ? `${formatNumber(row.ll84NaturalGasTherms, { maximumFractionDigits: 0 })} therms (~${formatNumber(row.ll84NaturalGasTherms * 29.3001, { maximumFractionDigits: 0 })} kWh)` : "Not available"}</strong></div>
       <div class="detail-card"><span>Weather-Normalized Site EUI</span><strong>${row.ll84WeatherNormalizedSiteEui ? formatNumber(row.ll84WeatherNormalizedSiteEui, { maximumFractionDigits: 1 }) + " kBtu/ft²" : "Not available"}</strong></div>
-      <div class="detail-card"><span>Display Grade</span><strong>${row.displayGrade || "Not available"}</strong></div>
-      <div class="detail-card"><span>Display Grade Basis</span><strong>${gradeBasisLabels[row.displayGradeBasis] || "Not available"}</strong></div>
-      <div class="detail-card"><span>Latest Derived Grade</span><strong>${row.derivedGrade || "Not available"}</strong></div>
-      <div class="detail-card"><span>Approx. Posted Cycle</span><strong>${row.lastScoredYear ? formatPostedCycle(row.lastScoredYear) : "Not available"}</strong></div>
-      <div class="detail-card"><span>Latest ENERGY STAR</span><strong>${row.ll84EnergyStarScore ?? "Not available"}</strong></div>
-      <div class="detail-card"><span>Latest Benchmarking Year</span><strong>${row.ll84Year || "Not available"}</strong></div>
     </div>
   `;
 }
