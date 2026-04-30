@@ -215,6 +215,22 @@ function normalizeFeature(feature) {
     displayGrade: props.display_grade,
     propertyName: props.ll84_property_name,
     propertyType: props.ll84_property_type,
+    largestUseType: props.ll84_largest_property_use_type,
+    displayGradeBasis: props.display_grade_basis,
+    derivedGrade: props.derived_grade_from_ll84_score,
+    lastScoredYear: props.ll84_last_scored_year ? Number(props.ll84_last_scored_year) : null,
+    lastScoredEnergyStarScore: props.ll84_last_scored_energy_star_score,
+    lastScoredDerivedGrade: props.ll84_last_scored_derived_grade,
+    ll84Year: props.ll84_calendar_year ? Number(props.ll84_calendar_year) : null,
+    ll84EnergyStarScore: props.ll84_energy_star_score,
+    ll84SiteEui: props.ll84_site_eui_kbtu_ft2,
+    ll84WeatherNormalizedSiteEui: props.ll84_weather_normalized_site_eui_kbtu_ft2,
+    ll84ElectricityKwh: props.ll84_electricity_use_grid_purchase_kwh,
+    ll84WeatherNormalizedElectricityKwh: props.ll84_weather_normalized_electricity_use_kwh,
+    ll84AnnualMaxDemandKw: props.ll84_annual_max_demand_kw,
+    ll84NaturalGasTherms: props.ll84_natural_gas_use_therms,
+    ll84TotalGhgEmissions: props.ll84_total_ghg_emissions_mtco2e,
+    ll84PropertyGfa: props.ll84_property_gfa_buildings_ft2,
     ghg: props.ll84_total_ghg_emissions_mtco2e,
     feature,
   };
@@ -393,32 +409,13 @@ function renderChoropleth(features) {
   choroplethLayer.clearLayers();
   choroplethLayer.addData(features);
   choroplethLayer.eachLayer((layer) => {
+    const row = normalizeFeature(layer.feature);
     const props = layer.feature.properties;
     layer.setStyle({
       fillColor: getChoroplethColor(props.ll84_total_ghg_emissions_mtco2e),
     });
-    layer.bindPopup(makePopupHtml(normalizeFeature(layer.feature)));
-    layer.on("click", () => {
-      renderDetails({
-        displayGrade: props.display_grade,
-        displayGradeBasis: props.display_grade_basis,
-        derivedGrade: props.derived_grade_from_ll84_score || "",
-        lastScoredDerivedGrade: props.ll84_last_scored_derived_grade || "",
-        lastScoredEnergyStarScore: props.ll84_last_scored_energy_star_score || null,
-        lastScoredYear: props.ll84_last_scored_year ? Number(props.ll84_last_scored_year) : null,
-        ll84EnergyStarScore: props.ll84_energy_star_score,
-        propertyType: props.ll84_property_type,
-        ll84Year: props.ll84_calendar_year ? Number(props.ll84_calendar_year) : null,
-        ll84WeatherNormalizedSiteEui: props.ll84_weather_normalized_site_eui_kbtu_ft2,
-        ll84ElectricityKwh: props.ll84_electricity_use_grid_purchase_kwh,
-        ll84PropertyGfa: props.ll84_property_gfa_buildings_ft2,
-        ll84TotalGhgEmissions: props.ll84_total_ghg_emissions_mtco2e,
-        address: props.address,
-        borough: props.borough,
-        bbl: props.bbl,
-        mapCategory: props.map_category,
-      });
-    });
+    layer.bindPopup(makePopupHtml(row));
+    layer.on("click", () => renderDetails(row));
   });
   choroplethLayer.addTo(map);
 }
