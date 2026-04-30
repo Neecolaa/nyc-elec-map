@@ -225,6 +225,7 @@ function normalizeFeature(feature) {
     ll84EnergyStarScore: props.ll84_energy_star_score,
     ll84SiteEui: props.ll84_site_eui_kbtu_ft2,
     ll84WeatherNormalizedSiteEui: props.ll84_weather_normalized_site_eui_kbtu_ft2,
+    ll84EstimatedYearlyEnergyKwh: props.ll84_estimated_yearly_energy_kwh,
     ll84ElectricityKwh: props.ll84_electricity_use_grid_purchase_kwh,
     ll84WeatherNormalizedElectricityKwh: props.ll84_weather_normalized_electricity_use_kwh,
     ll84AnnualMaxDemandKw: props.ll84_annual_max_demand_kw,
@@ -252,17 +253,19 @@ function renderDetails(row) {
     <p class="details-meta">${row.borough || "Unknown borough"} · ${categoryLabels[row.mapCategory]} · BBL ${row.bbl}</p>
     <div class="details-grid">
       <div class="detail-card"><span>Last Scored Benchmarking Year</span><strong>${row.lastScoredDerivedGrade ? `${row.lastScoredDerivedGrade} / ${row.lastScoredEnergyStarScore ?? "?"} (${row.lastScoredYear || "?"})` : "Not available"}</strong></div>
-      <div class="detail-card"><span>Gross Floor Area</span><strong>${row.ll84PropertyGfa ? formatNumber(row.ll84PropertyGfa) + " ft²" : "Not available"}</strong></div>
       <div class="detail-card"><span>Property Type</span><strong>${row.propertyType || "Not available"}</strong></div>
-      <div class="detail-card"><span>Electricity Use</span><strong>${row.ll84ElectricityKwh ? formatNumber(row.ll84ElectricityKwh, { maximumFractionDigits: 0 }) + " kWh" : "Not available"}</strong></div>
       <div class="detail-card"><span>GHG Emissions</span><strong>${row.ll84TotalGhgEmissions ? formatNumber(row.ll84TotalGhgEmissions, { maximumFractionDigits: 1 }) + " tCO2e" : "Not available"}</strong></div>
+      <div class="detail-card"><span>Est. Yearly Energy Use</span><strong>${row.ll84EstimatedYearlyEnergyKwh ? formatNumber(row.ll84EstimatedYearlyEnergyKwh, { maximumFractionDigits: 0 }) + " kWh" : "Not available"}</strong></div>
+      <div class="detail-card"><span>Gross Floor Area</span><strong>${row.ll84PropertyGfa ? formatNumber(row.ll84PropertyGfa) + " ft²" : "Not available"}</strong></div>
+      <div class="detail-card"><span>Electricity Use</span><strong>${row.ll84ElectricityKwh ? formatNumber(row.ll84ElectricityKwh, { maximumFractionDigits: 0 }) + " kWh" : "Not available"}</strong></div>
+      <div class="detail-card"><span>Natural Gas Use</span><strong>${row.ll84NaturalGasTherms ? `${formatNumber(row.ll84NaturalGasTherms, { maximumFractionDigits: 0 })} therms (~${formatNumber(row.ll84NaturalGasTherms * 29.3001, { maximumFractionDigits: 0 })} kWh)` : "Not available"}</strong></div>
+      <div class="detail-card"><span>Weather-Normalized Site EUI</span><strong>${row.ll84WeatherNormalizedSiteEui ? formatNumber(row.ll84WeatherNormalizedSiteEui, { maximumFractionDigits: 1 }) + " kBtu/ft²" : "Not available"}</strong></div>
       <div class="detail-card"><span>Display Grade</span><strong>${row.displayGrade || "Not available"}</strong></div>
       <div class="detail-card"><span>Display Grade Basis</span><strong>${gradeBasisLabels[row.displayGradeBasis] || "Not available"}</strong></div>
       <div class="detail-card"><span>Latest Derived Grade</span><strong>${row.derivedGrade || "Not available"}</strong></div>
       <div class="detail-card"><span>Approx. Posted Cycle</span><strong>${row.lastScoredYear ? formatPostedCycle(row.lastScoredYear) : "Not available"}</strong></div>
       <div class="detail-card"><span>Latest ENERGY STAR</span><strong>${row.ll84EnergyStarScore ?? "Not available"}</strong></div>
       <div class="detail-card"><span>Latest Benchmarking Year</span><strong>${row.ll84Year || "Not available"}</strong></div>
-      <div class="detail-card"><span>Weather-Normalized Site EUI</span><strong>${row.ll84WeatherNormalizedSiteEui ? formatNumber(row.ll84WeatherNormalizedSiteEui, { maximumFractionDigits: 1 }) + " kBtu/ft²" : "Not available"}</strong></div>
     </div>
   `;
 }
