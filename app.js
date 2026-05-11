@@ -489,7 +489,7 @@ function renderCompareItems() {
         ? `${formatNumber(item.ll84ElectricityKwh, { maximumFractionDigits: 0 })} kWh`
         : "Not available";
       const gasUse = item.ll84NaturalGasTherms !== null && item.ll84NaturalGasTherms !== undefined
-        ? `${formatNumber(item.ll84NaturalGasTherms, { maximumFractionDigits: 0 })} therms`
+        ? `${formatNumber(item.ll84NaturalGasTherms, { maximumFractionDigits: 0 })} therms (~${formatNumber(item.ll84NaturalGasTherms * 29.3001, { maximumFractionDigits: 0 })} kWh)`
         : "Not available";
       const floorArea = item.ll84PropertyGfa !== null && item.ll84PropertyGfa !== undefined
         ? `${formatNumber(item.ll84PropertyGfa)} ft²`
@@ -504,18 +504,18 @@ function renderCompareItems() {
             <p class="compare-item-meta">${item.borough || "Unknown borough"} · BBL ${item.bbl}</p>
           </div>
           <div class="compare-metrics">
-            <div class="compare-metric"><span>Energy Efficiency Rating</span><strong>${energyEfficiency}</strong></div>
+            <div class="compare-metric"><span>${renderTooltipLabel("Energy Efficiency Rating", "The year shows when that rating was reported, since the most recent available score for a building may come from an earlier year than its other energy data.")}</span><strong>${energyEfficiency}</strong></div>
             <div class="compare-metric"><span>Property Type</span><strong>${item.propertyType || "Not available"}</strong></div>
-            <div class="compare-metric"><span>Yearly Greenhouse Gas (GHG) Emissions</span><strong>${ghg}</strong></div>
-            <div class="compare-metric"><span>Est. Yearly Energy Use</span><strong>${estimatedEnergy}</strong></div>
+            <div class="compare-metric"><span>${renderTooltipLabel("Yearly Greenhouse Gas (GHG) Emissions", "Shown in tCO2e, or metric tons of carbon dioxide equivalent. This combines different greenhouse gases into one comparable emissions measure.")}</span><strong>${ghg}</strong></div>
+            <div class="compare-metric"><span>${renderTooltipLabel("Est. Yearly Energy Use", "An estimated total yearly energy figure in kWh, based on the most complete available energy information for the building.")}</span><strong>${estimatedEnergy}</strong></div>
           </div>
           <details class="details-more compare-more">
             <summary>More Details</summary>
             <div class="compare-metrics compare-metrics-more">
               <div class="compare-metric"><span>${renderTooltipLabel("Gross Floor Area", "Total building area measured to the exterior walls, including common and service spaces.")}</span><strong>${floorArea}</strong></div>
-              <div class="compare-metric"><span>Electricity Use</span><strong>${electricityUse}</strong></div>
-              <div class="compare-metric"><span>Natural Gas Use</span><strong>${gasUse}</strong></div>
-              <div class="compare-metric"><span>Weather-Normalized Site EUI</span><strong>${normalizedEui}</strong></div>
+              <div class="compare-metric"><span>${renderTooltipLabel("Electricity Use", "Total grid-purchased electricity for the building's most recent reported year.")}</span><strong>${electricityUse}</strong></div>
+              <div class="compare-metric"><span>${renderTooltipLabel("Natural Gas Use", "Total natural gas for the building's most recent reported year. It's shown in therms, with an approximate kWh equivalent to make it easier to compare with electricity and total energy use.")}</span><strong>${gasUse}</strong></div>
+              <div class="compare-metric"><span>${renderTooltipLabel("Weather-Normalized Site EUI", "Annual energy use per square foot, adjusted to reflect typical weather rather than unusually hot or cold conditions.")}</span><strong>${normalizedEui}</strong></div>
             </div>
           </details>
           <div class="compare-actions">
@@ -533,18 +533,18 @@ function renderDetails(row) {
     <h3 class="details-title">${row.address || row.propertyName || "Unknown address"}</h3>
     <p class="details-meta">${row.borough || "Unknown borough"} · ${categoryLabels[row.mapCategory]} · BBL ${row.bbl}</p>
     <div class="details-grid">
-      <div class="detail-card"><span>Energy Efficiency Rating</span><strong>${row.lastScoredDerivedGrade ? `${row.lastScoredDerivedGrade} / ${row.lastScoredEnergyStarScore ?? "?"} (${row.lastScoredYear || "?"})` : "Not available"}</strong></div>
+      <div class="detail-card"><span>${renderTooltipLabel("Energy Efficiency Rating", "The year shows when that rating was reported, since the most recent available score for a building may come from an earlier year than its other energy data.")}</span><strong>${row.lastScoredDerivedGrade ? `${row.lastScoredDerivedGrade} / ${row.lastScoredEnergyStarScore ?? "?"} (${row.lastScoredYear || "?"})` : "Not available"}</strong></div>
       <div class="detail-card"><span>Property Type</span><strong>${row.propertyType || "Not available"}</strong></div>
-      <div class="detail-card"><span>Yearly Greenhouse Gas (GHG) Emissions</span><strong>${row.ll84TotalGhgEmissions ? formatNumber(row.ll84TotalGhgEmissions, { maximumFractionDigits: 1 }) + " tCO2e" : "Not available"}</strong></div>
-      <div class="detail-card"><span>Est. Yearly Energy Use</span><strong>${row.ll84EstimatedYearlyEnergyKwh ? formatNumber(row.ll84EstimatedYearlyEnergyKwh, { maximumFractionDigits: 0 }) + " kWh" : "Not available"}</strong></div>
+      <div class="detail-card"><span>${renderTooltipLabel("Yearly Greenhouse Gas (GHG) Emissions", "Shown in tCO2e, or metric tons of carbon dioxide equivalent. This combines different greenhouse gases into one comparable emissions measure.")}</span><strong>${row.ll84TotalGhgEmissions ? formatNumber(row.ll84TotalGhgEmissions, { maximumFractionDigits: 1 }) + " tCO2e" : "Not available"}</strong></div>
+      <div class="detail-card"><span>${renderTooltipLabel("Est. Yearly Energy Use", "An estimated total yearly energy figure in kWh, based on the most complete available energy information for the building.")}</span><strong>${row.ll84EstimatedYearlyEnergyKwh ? formatNumber(row.ll84EstimatedYearlyEnergyKwh, { maximumFractionDigits: 0 }) + " kWh" : "Not available"}</strong></div>
     </div>
     <details class="details-more">
       <summary>More Details</summary>
       <div class="details-grid details-grid-more">
         <div class="detail-card"><span>${renderTooltipLabel("Gross Floor Area", "Total building area measured to the exterior walls, including common and service spaces.")}</span><strong>${row.ll84PropertyGfa ? formatNumber(row.ll84PropertyGfa) + " ft²" : "Not available"}</strong></div>
-        <div class="detail-card"><span>Electricity Use</span><strong>${row.ll84ElectricityKwh ? formatNumber(row.ll84ElectricityKwh, { maximumFractionDigits: 0 }) + " kWh" : "Not available"}</strong></div>
-        <div class="detail-card"><span>Natural Gas Use</span><strong>${row.ll84NaturalGasTherms ? `${formatNumber(row.ll84NaturalGasTherms, { maximumFractionDigits: 0 })} therms (~${formatNumber(row.ll84NaturalGasTherms * 29.3001, { maximumFractionDigits: 0 })} kWh)` : "Not available"}</strong></div>
-        <div class="detail-card"><span>Weather-Normalized Site EUI</span><strong>${row.ll84WeatherNormalizedSiteEui ? formatNumber(row.ll84WeatherNormalizedSiteEui, { maximumFractionDigits: 1 }) + " kBtu/ft²" : "Not available"}</strong></div>
+        <div class="detail-card"><span>${renderTooltipLabel("Electricity Use", "Total grid-purchased electricity for the building's most recent reported year.")}</span><strong>${row.ll84ElectricityKwh ? formatNumber(row.ll84ElectricityKwh, { maximumFractionDigits: 0 }) + " kWh" : "Not available"}</strong></div>
+        <div class="detail-card"><span>${renderTooltipLabel("Natural Gas Use", "Total natural gas for the building's most recent reported year. It's shown in therms, with an approximate kWh equivalent to make it easier to compare with electricity and total energy use.")}</span><strong>${row.ll84NaturalGasTherms ? `${formatNumber(row.ll84NaturalGasTherms, { maximumFractionDigits: 0 })} therms (~${formatNumber(row.ll84NaturalGasTherms * 29.3001, { maximumFractionDigits: 0 })} kWh)` : "Not available"}</strong></div>
+        <div class="detail-card"><span>${renderTooltipLabel("Weather-Normalized Site EUI", "Annual energy use per square foot, adjusted to reflect typical weather rather than unusually hot or cold conditions.")}</span><strong>${row.ll84WeatherNormalizedSiteEui ? formatNumber(row.ll84WeatherNormalizedSiteEui, { maximumFractionDigits: 1 }) + " kBtu/ft²" : "Not available"}</strong></div>
       </div>
     </details>
   `;

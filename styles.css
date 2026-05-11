@@ -455,6 +455,11 @@ body {
   transform: translateY(0);
 }
 
+.compare-item .metric-tooltip {
+  top: calc(100% + 8px);
+  bottom: auto;
+}
+
 .compare-metric strong {
   display: block;
   line-height: 1.35;
