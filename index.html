@@ -81,6 +81,20 @@
             </select>
           </label>
 
+          <div class="field field-inline-group">
+            <span id="score-filter-label">Grade filter</span>
+            <div class="inline-fields">
+              <select id="score-filter-value">
+                <option value="all">All grades</option>
+              </select>
+              <select id="score-filter-comparison">
+                <option value="exactly">exactly</option>
+                <option value="or_higher">or higher</option>
+                <option value="or_lower">or lower</option>
+              </select>
+            </div>
+          </div>
+
           <fieldset class="toggle-group">
             <legend>Data categories</legend>
             <label><input type="checkbox" value="ll84_scored" checked /> Scored building</label>

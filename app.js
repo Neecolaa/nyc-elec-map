@@ -64,6 +64,9 @@ const searchInput = document.getElementById("search-input");
 const viewMode = document.getElementById("view-mode");
 const boroughFilter = document.getElementById("borough-filter");
 const propertyTypeFilter = document.getElementById("property-type-filter");
+const scoreFilterLabel = document.getElementById("score-filter-label");
+const scoreFilterValue = document.getElementById("score-filter-value");
+const scoreFilterComparison = document.getElementById("score-filter-comparison");
 const categoryCheckboxes = Array.from(document.querySelectorAll('.toggle-group input[type="checkbox"]'));
 const detailsContent = document.getElementById("details-content");
 const favoritesContent = document.getElementById("favorites-content");
@@ -71,6 +74,30 @@ const gradeLegend = document.getElementById("grade-legend");
 const gradeLegendNote = document.getElementById("grade-legend-note");
 const ghgLegend = document.getElementById("ghg-legend");
 const ghgLegendNote = document.getElementById("ghg-legend-note");
+
+const scoreFilterConfig = {
+  points: {
+    label: "Grade filter",
+    allLabel: "All grades",
+    options: [
+      { value: "A", label: "A", rank: 5 },
+      { value: "B", label: "B", rank: 4 },
+      { value: "C", label: "C", rank: 3 },
+      { value: "D", label: "D", rank: 2 },
+      { value: "F", label: "F", rank: 1 },
+    ],
+  },
+  ghg: {
+    label: "Emissions filter",
+    allLabel: "All emissions bands",
+    options: [
+      { value: "ghg_1", label: "Under 150 tCO2e", rank: 1 },
+      { value: "ghg_2", label: "150-399.9 tCO2e", rank: 2 },
+      { value: "ghg_3", label: "400-1,199.9 tCO2e", rank: 3 },
+      { value: "ghg_4", label: "1,200+ tCO2e", rank: 4 },
+    ],
+  },
+};
 
 function formatNumber(value, options = {}) {
   if (value === null || value === undefined || value === "") {
@@ -188,6 +215,79 @@ function populateSelect(select, values, placeholder) {
     option.textContent = value || placeholder;
     select.appendChild(option);
   }
+}
+
+function populateScoreFilterOptions(mode) {
+  const config = scoreFilterConfig[mode];
+  const previousValue = scoreFilterValue.value;
+
+  scoreFilterLabel.textContent = config.label;
+  scoreFilterValue.innerHTML = "";
+
+  const allOption = document.createElement("option");
+  allOption.value = "all";
+  allOption.textContent = config.allLabel;
+  scoreFilterValue.appendChild(allOption);
+
+  for (const optionConfig of config.options) {
+    const option = document.createElement("option");
+    option.value = optionConfig.value;
+    option.textContent = optionConfig.label;
+    scoreFilterValue.appendChild(option);
+  }
+
+  const hasPrevious = config.options.some((option) => option.value === previousValue);
+  scoreFilterValue.value = hasPrevious ? previousValue : "all";
+}
+
+function getGhgBand(value) {
+  if (value === null || value === undefined) {
+    return "";
+  }
+  if (value < 150) {
+    return "ghg_1";
+  }
+  if (value < 400) {
+    return "ghg_2";
+  }
+  if (value < 1200) {
+    return "ghg_3";
+  }
+  return "ghg_4";
+}
+
+function getScoreRank(mode, value) {
+  const config = scoreFilterConfig[mode];
+  return config.options.find((option) => option.value === value)?.rank ?? null;
+}
+
+function getRowScoreValue(row, mode) {
+  if (mode === "ghg") {
+    return getGhgBand(row.ll84TotalGhgEmissions ?? row.ghg ?? null);
+  }
+  return row.displayGrade || "";
+}
+
+function matchesScoreFilter(row, filters) {
+  if (filters.scoreValue === "all") {
+    return true;
+  }
+
+  const rowScoreValue = getRowScoreValue(row, filters.mode);
+  const rowRank = getScoreRank(filters.mode, rowScoreValue);
+  const filterRank = getScoreRank(filters.mode, filters.scoreValue);
+
+  if (rowRank === null || filterRank === null) {
+    return false;
+  }
+
+  if (filters.scoreComparison === "or_higher") {
+    return rowRank >= filterRank;
+  }
+  if (filters.scoreComparison === "or_lower") {
+    return rowRank <= filterRank;
+  }
+  return rowRank === filterRank;
 }
 
 function makePopupHtml(row) {
@@ -398,6 +498,8 @@ function getFilters() {
     query: normalizeSearchText(searchInput.value),
     borough: boroughFilter.value,
     propertyType: propertyTypeFilter.value,
+    scoreValue: scoreFilterValue.value,
+    scoreComparison: scoreFilterComparison.value,
     categories: new Set(categoryCheckboxes.filter((input) => input.checked).map((input) => input.value)),
   };
 }
@@ -465,6 +567,9 @@ function getSearchScore(row, query) {
 
 function rowMatchesFilters(row, filters) {
   if (!filters.categories.has(row.mapCategory)) {
+    return false;
+  }
+  if (!matchesScoreFilter(row, filters)) {
     return false;
   }
   if (filters.borough !== "all" && row.borough !== filters.borough) {
@@ -566,6 +671,9 @@ function applyFilters({ fitBounds = false } = {}) {
 }
 
 async function init() {
+  populateScoreFilterOptions(viewMode.value);
+  renderFavorites();
+
   const [pointsResponse, ghgResponse] = await Promise.all([
     fetch("./energy_map_data.json"),
     fetch("./ghg_choropleth_data.geojson"),
@@ -579,6 +687,7 @@ async function init() {
   const propertyTypes = [...new Set(state.allRows.map((row) => row.propertyType).filter(Boolean))].sort();
   populateSelect(boroughFilter, boroughs, "Unknown borough");
   populateSelect(propertyTypeFilter, propertyTypes, "Unknown type");
+  populateScoreFilterOptions(viewMode.value);
 
   const debouncedApply = (() => {
     let timeoutId = null;
@@ -589,9 +698,14 @@ async function init() {
   })();
 
   searchInput.addEventListener("input", debouncedApply);
-  viewMode.addEventListener("change", () => applyFilters({ fitBounds: true }));
+  viewMode.addEventListener("change", () => {
+    populateScoreFilterOptions(viewMode.value);
+    applyFilters({ fitBounds: true });
+  });
   boroughFilter.addEventListener("change", () => applyFilters());
   propertyTypeFilter.addEventListener("change", () => applyFilters());
+  scoreFilterValue.addEventListener("change", () => applyFilters());
+  scoreFilterComparison.addEventListener("change", () => applyFilters());
   categoryCheckboxes.forEach((input) => input.addEventListener("change", () => applyFilters()));
   map.getContainer().addEventListener("click", (event) => {
     const popupButton = event.target.closest(".popup-favorite-button");
@@ -617,10 +731,12 @@ async function init() {
     }
   });
 
-  renderFavorites();
   applyFilters({ fitBounds: true });
 }
 
 init().catch((error) => {
-  detailsContent.textContent = `Could not load the map data. ${error.message}`;
+  const isFileProtocol = window.location.protocol === "file:";
+  detailsContent.textContent = isFileProtocol
+    ? "Could not load the map data. Open the site through a local web server rather than file://."
+    : `Could not load the map data. ${error.message}`;
 });

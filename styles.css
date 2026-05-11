@@ -159,6 +159,12 @@ body {
   background: #fff;
 }
 
+.field-inline-group .inline-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
 .toggle-group {
   padding: 12px;
   border: 1px solid var(--border);
