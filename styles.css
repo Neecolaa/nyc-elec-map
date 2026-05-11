@@ -400,11 +400,59 @@ body {
   border: 1px solid rgba(55, 65, 81, 0.08);
 }
 
-.compare-metric span {
+.compare-metric > span {
   display: block;
   margin-bottom: 5px;
   font-size: 0.76rem;
   color: var(--muted);
+}
+
+.metric-label-with-tooltip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+}
+
+.metric-help {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 1px solid rgba(100, 116, 139, 0.35);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: help;
+}
+
+.metric-tooltip {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 8px);
+  z-index: 20;
+  width: min(220px, 70vw);
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(31, 41, 51, 0.96);
+  color: #fff;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  box-shadow: 0 10px 24px rgba(31, 41, 51, 0.24);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.metric-label-with-tooltip:hover .metric-tooltip,
+.metric-label-with-tooltip:focus-within .metric-tooltip {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .compare-metric strong {
@@ -473,7 +521,7 @@ body {
   border: 1px solid rgba(55, 65, 81, 0.08);
 }
 
-.detail-card span {
+.detail-card > span {
   display: block;
   font-size: 0.76rem;
   color: var(--muted);

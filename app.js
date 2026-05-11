@@ -423,6 +423,22 @@ function buildCompareRecord(row) {
   };
 }
 
+function renderTooltipLabel(label, tooltipText) {
+  return `
+    <span class="metric-label-with-tooltip">
+      <span>${label}</span>
+      <button
+        type="button"
+        class="metric-help"
+        aria-label="${tooltipText}"
+      >
+        ?
+      </button>
+      <span class="metric-tooltip" role="tooltip">${tooltipText}</span>
+    </span>
+  `;
+}
+
 function toggleCompareByBbl(bbl) {
   const existingIndex = state.compareItems.findIndex((item) => item.bbl === bbl);
   if (existingIndex >= 0) {
@@ -496,7 +512,7 @@ function renderCompareItems() {
           <details class="details-more compare-more">
             <summary>More Details</summary>
             <div class="compare-metrics compare-metrics-more">
-              <div class="compare-metric"><span>Gross Floor Area</span><strong>${floorArea}</strong></div>
+              <div class="compare-metric"><span>${renderTooltipLabel("Gross Floor Area", "Total building area measured to the exterior walls, including common and service spaces.")}</span><strong>${floorArea}</strong></div>
               <div class="compare-metric"><span>Electricity Use</span><strong>${electricityUse}</strong></div>
               <div class="compare-metric"><span>Natural Gas Use</span><strong>${gasUse}</strong></div>
               <div class="compare-metric"><span>Weather-Normalized Site EUI</span><strong>${normalizedEui}</strong></div>
@@ -525,7 +541,7 @@ function renderDetails(row) {
     <details class="details-more">
       <summary>More Details</summary>
       <div class="details-grid details-grid-more">
-        <div class="detail-card"><span>Gross Floor Area</span><strong>${row.ll84PropertyGfa ? formatNumber(row.ll84PropertyGfa) + " ft²" : "Not available"}</strong></div>
+        <div class="detail-card"><span>${renderTooltipLabel("Gross Floor Area", "Total building area measured to the exterior walls, including common and service spaces.")}</span><strong>${row.ll84PropertyGfa ? formatNumber(row.ll84PropertyGfa) + " ft²" : "Not available"}</strong></div>
         <div class="detail-card"><span>Electricity Use</span><strong>${row.ll84ElectricityKwh ? formatNumber(row.ll84ElectricityKwh, { maximumFractionDigits: 0 }) + " kWh" : "Not available"}</strong></div>
         <div class="detail-card"><span>Natural Gas Use</span><strong>${row.ll84NaturalGasTherms ? `${formatNumber(row.ll84NaturalGasTherms, { maximumFractionDigits: 0 })} therms (~${formatNumber(row.ll84NaturalGasTherms * 29.3001, { maximumFractionDigits: 0 })} kWh)` : "Not available"}</strong></div>
         <div class="detail-card"><span>Weather-Normalized Site EUI</span><strong>${row.ll84WeatherNormalizedSiteEui ? formatNumber(row.ll84WeatherNormalizedSiteEui, { maximumFractionDigits: 1 }) + " kBtu/ft²" : "Not available"}</strong></div>
