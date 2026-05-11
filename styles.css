@@ -247,6 +247,7 @@ body {
 
 .details-panel-bottom {
   margin: 0;
+  align-self: start;
 }
 
 .details-panel-bottom h2 {
@@ -305,9 +306,38 @@ body {
 }
 
 .favorites-section {
-  margin-top: 18px;
-  padding-top: 18px;
+  margin-top: 16px;
+  padding-top: 16px;
   border-top: 1px solid var(--border);
+}
+
+.favorites-section:not([open]) {
+  margin-bottom: 2px;
+}
+
+.favorites-summary {
+  cursor: pointer;
+  list-style: none;
+  font-family: "Fraunces", serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--ink);
+}
+
+.favorites-summary::-webkit-details-marker {
+  display: none;
+}
+
+.favorites-summary::after {
+  content: "+";
+  float: right;
+  color: var(--muted);
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.favorites-section[open] .favorites-summary::after {
+  content: "−";
 }
 
 .favorites-header p {
