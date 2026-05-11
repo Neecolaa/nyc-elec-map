@@ -486,9 +486,6 @@ function updateStats(rows) {
 
   document.getElementById("visible-count").textContent = formatNumber(counts.total);
   document.getElementById("scored-count").textContent = formatNumber(counts.ll84_scored);
-  document.getElementById("latest-score-count").textContent = formatNumber(
-    rows.filter((row) => row.ll84EnergyStarScore !== null && row.ll84EnergyStarScore !== undefined).length
-  );
   document.getElementById("no-score-count").textContent = formatNumber(counts.ll84_benchmarked_no_score);
 }
 
