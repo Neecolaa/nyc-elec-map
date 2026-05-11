@@ -762,7 +762,7 @@ async function init() {
   searchInput.addEventListener("input", debouncedApply);
   viewMode.addEventListener("change", () => {
     populateScoreFilterOptions(viewMode.value);
-    applyFilters({ fitBounds: true });
+    applyFilters();
   });
   boroughFilter.addEventListener("change", () => applyFilters());
   propertyTypeFilter.addEventListener("change", () => applyFilters());
