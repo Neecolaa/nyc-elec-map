@@ -318,7 +318,7 @@ function makePopupHtml(row) {
       <p class="popup-subtitle">Grade: ${grade}</p>
       <p class="popup-subtitle">GHG: ${ghg}</p>
       <button class="popup-favorite-button ${isFavorited ? "is-favorited" : ""}" data-bbl="${row.bbl}">
-        ${isFavorited ? "Remove Favorite" : "Add Favorite"}
+        ${isFavorited ? "Remove from Comparison" : "Include in Comparison"}
       </button>
     </div>
   `;
@@ -392,13 +392,31 @@ function getRowByBbl(bbl) {
   return state.allRows.find((row) => row.bbl === bbl) || state.choroplethFeatures.find((row) => row.bbl === bbl);
 }
 
+function hydrateFavorites(favorites) {
+  return favorites
+    .map((favorite) => {
+      const row = getRowByBbl(favorite.bbl);
+      return row ? buildFavoriteRecord(row) : favorite;
+    })
+    .filter((favorite) => favorite && favorite.bbl);
+}
+
 function buildFavoriteRecord(row) {
   return {
     bbl: row.bbl,
     address: row.address || row.propertyName || "Unknown address",
     borough: row.borough || "",
     displayGrade: row.displayGrade || "",
+    lastScoredYear: row.lastScoredYear ?? null,
+    lastScoredEnergyStarScore: row.lastScoredEnergyStarScore ?? null,
+    lastScoredDerivedGrade: row.lastScoredDerivedGrade || "",
+    propertyType: row.propertyType || "",
     ll84TotalGhgEmissions: row.ll84TotalGhgEmissions ?? row.ghg ?? null,
+    ll84EstimatedYearlyEnergyKwh: row.ll84EstimatedYearlyEnergyKwh ?? null,
+    ll84PropertyGfa: row.ll84PropertyGfa ?? null,
+    ll84ElectricityKwh: row.ll84ElectricityKwh ?? null,
+    ll84NaturalGasTherms: row.ll84NaturalGasTherms ?? null,
+    ll84WeatherNormalizedSiteEui: row.ll84WeatherNormalizedSiteEui ?? null,
   };
 }
 
@@ -432,26 +450,57 @@ function focusFavorite(bbl) {
 function renderFavorites() {
   if (!state.favorites.length) {
     favoritesContent.className = "favorites-empty";
-    favoritesContent.textContent = "No favorites yet. Use the button in a map popup to save one.";
+    favoritesContent.textContent = "No buildings in compare yet. Use the button in a map popup to add one.";
     return;
   }
 
   favoritesContent.className = "favorites-list";
   favoritesContent.innerHTML = state.favorites
     .map((favorite) => {
-      const grade = favorite.displayGrade || "No score";
-      const ghg =
-        favorite.ll84TotalGhgEmissions !== null && favorite.ll84TotalGhgEmissions !== undefined
-          ? `${formatNumber(favorite.ll84TotalGhgEmissions, { maximumFractionDigits: 1 })} tCO2e`
-          : "GHG unavailable";
+      const energyEfficiency = favorite.lastScoredDerivedGrade
+        ? `${favorite.lastScoredDerivedGrade} / ${favorite.lastScoredEnergyStarScore ?? "?"} (${favorite.lastScoredYear || "?"})`
+        : "Not available";
+      const ghg = favorite.ll84TotalGhgEmissions !== null && favorite.ll84TotalGhgEmissions !== undefined
+        ? `${formatNumber(favorite.ll84TotalGhgEmissions, { maximumFractionDigits: 1 })} tCO2e`
+        : "Not available";
+      const estimatedEnergy = favorite.ll84EstimatedYearlyEnergyKwh !== null && favorite.ll84EstimatedYearlyEnergyKwh !== undefined
+        ? `${formatNumber(favorite.ll84EstimatedYearlyEnergyKwh, { maximumFractionDigits: 0 })} kWh`
+        : "Not available";
+      const electricityUse = favorite.ll84ElectricityKwh !== null && favorite.ll84ElectricityKwh !== undefined
+        ? `${formatNumber(favorite.ll84ElectricityKwh, { maximumFractionDigits: 0 })} kWh`
+        : "Not available";
+      const gasUse = favorite.ll84NaturalGasTherms !== null && favorite.ll84NaturalGasTherms !== undefined
+        ? `${formatNumber(favorite.ll84NaturalGasTherms, { maximumFractionDigits: 0 })} therms`
+        : "Not available";
+      const floorArea = favorite.ll84PropertyGfa !== null && favorite.ll84PropertyGfa !== undefined
+        ? `${formatNumber(favorite.ll84PropertyGfa)} ft²`
+        : "Not available";
+      const normalizedEui = favorite.ll84WeatherNormalizedSiteEui !== null && favorite.ll84WeatherNormalizedSiteEui !== undefined
+        ? `${formatNumber(favorite.ll84WeatherNormalizedSiteEui, { maximumFractionDigits: 1 })} kBtu/ft²`
+        : "Not available";
       return `
         <div class="favorite-item">
           <div>
             <p class="favorite-item-title">${favorite.address}</p>
-            <p class="favorite-item-meta">${favorite.borough || "Unknown borough"} · Grade ${grade} · ${ghg}</p>
+            <p class="favorite-item-meta">${favorite.borough || "Unknown borough"} · BBL ${favorite.bbl}</p>
           </div>
+          <div class="favorite-metrics">
+            <div class="favorite-metric"><span>Energy Efficiency Rating</span><strong>${energyEfficiency}</strong></div>
+            <div class="favorite-metric"><span>Property Type</span><strong>${favorite.propertyType || "Not available"}</strong></div>
+            <div class="favorite-metric"><span>GHG Emissions</span><strong>${ghg}</strong></div>
+            <div class="favorite-metric"><span>Est. Yearly Energy Use</span><strong>${estimatedEnergy}</strong></div>
+          </div>
+          <details class="details-more compare-more">
+            <summary>More Details</summary>
+            <div class="favorite-metrics favorite-metrics-more">
+              <div class="favorite-metric"><span>Gross Floor Area</span><strong>${floorArea}</strong></div>
+              <div class="favorite-metric"><span>Electricity Use</span><strong>${electricityUse}</strong></div>
+              <div class="favorite-metric"><span>Natural Gas Use</span><strong>${gasUse}</strong></div>
+              <div class="favorite-metric"><span>Weather-Normalized Site EUI</span><strong>${normalizedEui}</strong></div>
+            </div>
+          </details>
           <div class="favorite-actions">
-            <button class="favorite-button" data-bbl="${favorite.bbl}">View</button>
+            <button class="favorite-button" data-bbl="${favorite.bbl}">Focus</button>
             <button class="favorite-remove" data-bbl="${favorite.bbl}">Remove</button>
           </div>
         </div>
@@ -690,7 +739,8 @@ async function init() {
   state.allRows = await pointsResponse.json();
   const ghgGeojson = await ghgResponse.json();
   state.choroplethFeatures = ghgGeojson.features.map(normalizeFeature);
-  state.favorites = loadFavorites().filter((favorite) => getRowByBbl(favorite.bbl));
+  state.favorites = hydrateFavorites(loadFavorites()).filter((favorite) => getRowByBbl(favorite.bbl));
+  saveFavorites();
 
   const boroughs = [...new Set(state.allRows.map((row) => row.borough).filter(Boolean))].sort();
   const propertyTypes = [...new Set(state.allRows.map((row) => row.propertyType).filter(Boolean))].sort();
@@ -726,7 +776,7 @@ async function init() {
       event.preventDefault();
       const isNowFavorited = toggleFavoriteByBbl(popupButton.dataset.bbl);
       popupButton.classList.toggle("is-favorited", isNowFavorited);
-      popupButton.textContent = isNowFavorited ? "Remove Favorite" : "Add Favorite";
+      popupButton.textContent = isNowFavorited ? "Remove from Comparison" : "Include in Comparison";
     }
   });
   favoritesContent.addEventListener("click", (event) => {
@@ -744,6 +794,7 @@ async function init() {
     }
   });
 
+  renderFavorites();
   applyFilters({ fitBounds: true });
 }
 
