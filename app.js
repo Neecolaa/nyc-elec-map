@@ -23,10 +23,11 @@ const state = {
   choroplethFeatures: [],
   visibleRows: [],
   visibleChoroplethFeatures: [],
-  favorites: [],
+  compareItems: [],
 };
 
-const FAVORITES_STORAGE_KEY = "nyc-energy-map-favorites-v1";
+const COMPARE_STORAGE_KEY = "nyc-energy-map-compare-v1";
+const LEGACY_COMPARE_STORAGE_KEY = "nyc-energy-map-favorites-v1";
 
 const map = L.map("map", {
   zoomControl: false,
@@ -70,7 +71,7 @@ const scoreFilterComparison = document.getElementById("score-filter-comparison")
 const clearFiltersButton = document.getElementById("clear-filters-button");
 const categoryCheckboxes = Array.from(document.querySelectorAll('.toggle-group input[type="checkbox"]'));
 const detailsContent = document.getElementById("details-content");
-const favoritesContent = document.getElementById("favorites-content");
+const compareContent = document.getElementById("compare-content");
 const gradeLegend = document.getElementById("grade-legend");
 const gradeLegendNote = document.getElementById("grade-legend-note");
 const ghgLegend = document.getElementById("ghg-legend");
@@ -309,7 +310,7 @@ function makePopupHtml(row) {
   const ghg = ghgValue !== null && ghgValue !== undefined
     ? `${formatNumber(ghgValue, { maximumFractionDigits: 1 })} tCO2e`
     : "Not available";
-  const isFavorited = isFavorite(row.bbl);
+  const isCompared = isComparedByBbl(row.bbl);
 
   return `
     <div>
@@ -317,8 +318,8 @@ function makePopupHtml(row) {
       <p class="popup-subtitle">${row.borough || "Unknown borough"} · ${categoryLabels[row.mapCategory]}</p>
       <p class="popup-subtitle">Grade: ${grade}</p>
       <p class="popup-subtitle">GHG: ${ghg}</p>
-      <button class="popup-favorite-button ${isFavorited ? "is-favorited" : ""}" data-bbl="${row.bbl}">
-        ${isFavorited ? "Remove from Comparison" : "Include in Comparison"}
+      <button class="popup-compare-button ${isCompared ? "is-compared" : ""}" data-bbl="${row.bbl}">
+        ${isCompared ? "Remove from Comparison" : "Include in Comparison"}
       </button>
     </div>
   `;
@@ -367,9 +368,11 @@ function parseSearchAliases(value) {
     .filter(Boolean);
 }
 
-function loadFavorites() {
+function loadCompareItems() {
   try {
-    const raw = window.localStorage.getItem(FAVORITES_STORAGE_KEY);
+    const raw =
+      window.localStorage.getItem(COMPARE_STORAGE_KEY) ??
+      window.localStorage.getItem(LEGACY_COMPARE_STORAGE_KEY);
     const parsed = JSON.parse(raw || "[]");
     if (!Array.isArray(parsed)) {
       return [];
@@ -380,28 +383,28 @@ function loadFavorites() {
   }
 }
 
-function saveFavorites() {
-  window.localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(state.favorites));
+function saveCompareItems() {
+  window.localStorage.setItem(COMPARE_STORAGE_KEY, JSON.stringify(state.compareItems));
 }
 
-function isFavorite(bbl) {
-  return state.favorites.some((favorite) => favorite.bbl === bbl);
+function isComparedByBbl(bbl) {
+  return state.compareItems.some((item) => item.bbl === bbl);
 }
 
 function getRowByBbl(bbl) {
   return state.allRows.find((row) => row.bbl === bbl) || state.choroplethFeatures.find((row) => row.bbl === bbl);
 }
 
-function hydrateFavorites(favorites) {
-  return favorites
-    .map((favorite) => {
-      const row = getRowByBbl(favorite.bbl);
-      return row ? buildFavoriteRecord(row) : favorite;
+function hydrateCompareItems(compareItems) {
+  return compareItems
+    .map((item) => {
+      const row = getRowByBbl(item.bbl);
+      return row ? buildCompareRecord(row) : item;
     })
-    .filter((favorite) => favorite && favorite.bbl);
+    .filter((item) => item && item.bbl);
 }
 
-function buildFavoriteRecord(row) {
+function buildCompareRecord(row) {
   return {
     bbl: row.bbl,
     address: row.address || row.propertyName || "Unknown address",
@@ -420,23 +423,23 @@ function buildFavoriteRecord(row) {
   };
 }
 
-function toggleFavoriteByBbl(bbl) {
-  const existingIndex = state.favorites.findIndex((favorite) => favorite.bbl === bbl);
+function toggleCompareByBbl(bbl) {
+  const existingIndex = state.compareItems.findIndex((item) => item.bbl === bbl);
   if (existingIndex >= 0) {
-    state.favorites.splice(existingIndex, 1);
+    state.compareItems.splice(existingIndex, 1);
   } else {
     const row = getRowByBbl(bbl);
     if (!row) {
       return false;
     }
-    state.favorites.unshift(buildFavoriteRecord(row));
+    state.compareItems.unshift(buildCompareRecord(row));
   }
-  saveFavorites();
-  renderFavorites();
+  saveCompareItems();
+  renderCompareItems();
   return existingIndex < 0;
 }
 
-function focusFavorite(bbl) {
+function focusCompareItem(bbl) {
   const row = getRowByBbl(bbl);
   if (!row) {
     return;
@@ -447,61 +450,61 @@ function focusFavorite(bbl) {
   }
 }
 
-function renderFavorites() {
-  if (!state.favorites.length) {
-    favoritesContent.className = "favorites-empty";
-    favoritesContent.textContent = "No buildings in compare yet. Use the button in a map popup to add one.";
+function renderCompareItems() {
+  if (!state.compareItems.length) {
+    compareContent.className = "compare-empty";
+    compareContent.textContent = "No buildings in compare yet. Use the button in a map popup to add one.";
     return;
   }
 
-  favoritesContent.className = "favorites-list";
-  favoritesContent.innerHTML = state.favorites
-    .map((favorite) => {
-      const energyEfficiency = favorite.lastScoredDerivedGrade
-        ? `${favorite.lastScoredDerivedGrade} / ${favorite.lastScoredEnergyStarScore ?? "?"} (${favorite.lastScoredYear || "?"})`
+  compareContent.className = "compare-list";
+  compareContent.innerHTML = state.compareItems
+    .map((item) => {
+      const energyEfficiency = item.lastScoredDerivedGrade
+        ? `${item.lastScoredDerivedGrade} / ${item.lastScoredEnergyStarScore ?? "?"} (${item.lastScoredYear || "?"})`
         : "Not available";
-      const ghg = favorite.ll84TotalGhgEmissions !== null && favorite.ll84TotalGhgEmissions !== undefined
-        ? `${formatNumber(favorite.ll84TotalGhgEmissions, { maximumFractionDigits: 1 })} tCO2e`
+      const ghg = item.ll84TotalGhgEmissions !== null && item.ll84TotalGhgEmissions !== undefined
+        ? `${formatNumber(item.ll84TotalGhgEmissions, { maximumFractionDigits: 1 })} tCO2e`
         : "Not available";
-      const estimatedEnergy = favorite.ll84EstimatedYearlyEnergyKwh !== null && favorite.ll84EstimatedYearlyEnergyKwh !== undefined
-        ? `${formatNumber(favorite.ll84EstimatedYearlyEnergyKwh, { maximumFractionDigits: 0 })} kWh`
+      const estimatedEnergy = item.ll84EstimatedYearlyEnergyKwh !== null && item.ll84EstimatedYearlyEnergyKwh !== undefined
+        ? `${formatNumber(item.ll84EstimatedYearlyEnergyKwh, { maximumFractionDigits: 0 })} kWh`
         : "Not available";
-      const electricityUse = favorite.ll84ElectricityKwh !== null && favorite.ll84ElectricityKwh !== undefined
-        ? `${formatNumber(favorite.ll84ElectricityKwh, { maximumFractionDigits: 0 })} kWh`
+      const electricityUse = item.ll84ElectricityKwh !== null && item.ll84ElectricityKwh !== undefined
+        ? `${formatNumber(item.ll84ElectricityKwh, { maximumFractionDigits: 0 })} kWh`
         : "Not available";
-      const gasUse = favorite.ll84NaturalGasTherms !== null && favorite.ll84NaturalGasTherms !== undefined
-        ? `${formatNumber(favorite.ll84NaturalGasTherms, { maximumFractionDigits: 0 })} therms`
+      const gasUse = item.ll84NaturalGasTherms !== null && item.ll84NaturalGasTherms !== undefined
+        ? `${formatNumber(item.ll84NaturalGasTherms, { maximumFractionDigits: 0 })} therms`
         : "Not available";
-      const floorArea = favorite.ll84PropertyGfa !== null && favorite.ll84PropertyGfa !== undefined
-        ? `${formatNumber(favorite.ll84PropertyGfa)} ft²`
+      const floorArea = item.ll84PropertyGfa !== null && item.ll84PropertyGfa !== undefined
+        ? `${formatNumber(item.ll84PropertyGfa)} ft²`
         : "Not available";
-      const normalizedEui = favorite.ll84WeatherNormalizedSiteEui !== null && favorite.ll84WeatherNormalizedSiteEui !== undefined
-        ? `${formatNumber(favorite.ll84WeatherNormalizedSiteEui, { maximumFractionDigits: 1 })} kBtu/ft²`
+      const normalizedEui = item.ll84WeatherNormalizedSiteEui !== null && item.ll84WeatherNormalizedSiteEui !== undefined
+        ? `${formatNumber(item.ll84WeatherNormalizedSiteEui, { maximumFractionDigits: 1 })} kBtu/ft²`
         : "Not available";
       return `
-        <div class="favorite-item">
+        <div class="compare-item">
           <div>
-            <p class="favorite-item-title">${favorite.address}</p>
-            <p class="favorite-item-meta">${favorite.borough || "Unknown borough"} · BBL ${favorite.bbl}</p>
+            <p class="compare-item-title">${item.address}</p>
+            <p class="compare-item-meta">${item.borough || "Unknown borough"} · BBL ${item.bbl}</p>
           </div>
-          <div class="favorite-metrics">
-            <div class="favorite-metric"><span>Energy Efficiency Rating</span><strong>${energyEfficiency}</strong></div>
-            <div class="favorite-metric"><span>Property Type</span><strong>${favorite.propertyType || "Not available"}</strong></div>
-            <div class="favorite-metric"><span>GHG Emissions</span><strong>${ghg}</strong></div>
-            <div class="favorite-metric"><span>Est. Yearly Energy Use</span><strong>${estimatedEnergy}</strong></div>
+          <div class="compare-metrics">
+            <div class="compare-metric"><span>Energy Efficiency Rating</span><strong>${energyEfficiency}</strong></div>
+            <div class="compare-metric"><span>Property Type</span><strong>${item.propertyType || "Not available"}</strong></div>
+            <div class="compare-metric"><span>GHG Emissions</span><strong>${ghg}</strong></div>
+            <div class="compare-metric"><span>Est. Yearly Energy Use</span><strong>${estimatedEnergy}</strong></div>
           </div>
           <details class="details-more compare-more">
             <summary>More Details</summary>
-            <div class="favorite-metrics favorite-metrics-more">
-              <div class="favorite-metric"><span>Gross Floor Area</span><strong>${floorArea}</strong></div>
-              <div class="favorite-metric"><span>Electricity Use</span><strong>${electricityUse}</strong></div>
-              <div class="favorite-metric"><span>Natural Gas Use</span><strong>${gasUse}</strong></div>
-              <div class="favorite-metric"><span>Weather-Normalized Site EUI</span><strong>${normalizedEui}</strong></div>
+            <div class="compare-metrics compare-metrics-more">
+              <div class="compare-metric"><span>Gross Floor Area</span><strong>${floorArea}</strong></div>
+              <div class="compare-metric"><span>Electricity Use</span><strong>${electricityUse}</strong></div>
+              <div class="compare-metric"><span>Natural Gas Use</span><strong>${gasUse}</strong></div>
+              <div class="compare-metric"><span>Weather-Normalized Site EUI</span><strong>${normalizedEui}</strong></div>
             </div>
           </details>
-          <div class="favorite-actions">
-            <button class="favorite-button" data-bbl="${favorite.bbl}">Focus</button>
-            <button class="favorite-remove" data-bbl="${favorite.bbl}">Remove</button>
+          <div class="compare-actions">
+            <button class="compare-button" data-bbl="${item.bbl}">Focus</button>
+            <button class="compare-remove" data-bbl="${item.bbl}">Remove</button>
           </div>
         </div>
       `;
@@ -730,7 +733,7 @@ function applyFilters({ fitBounds = false } = {}) {
 
 async function init() {
   populateScoreFilterOptions(viewMode.value);
-  renderFavorites();
+  renderCompareItems();
 
   const [pointsResponse, ghgResponse] = await Promise.all([
     fetch("./energy_map_data.json"),
@@ -739,8 +742,8 @@ async function init() {
   state.allRows = await pointsResponse.json();
   const ghgGeojson = await ghgResponse.json();
   state.choroplethFeatures = ghgGeojson.features.map(normalizeFeature);
-  state.favorites = hydrateFavorites(loadFavorites()).filter((favorite) => getRowByBbl(favorite.bbl));
-  saveFavorites();
+  state.compareItems = hydrateCompareItems(loadCompareItems()).filter((item) => getRowByBbl(item.bbl));
+  saveCompareItems();
 
   const boroughs = [...new Set(state.allRows.map((row) => row.borough).filter(Boolean))].sort();
   const propertyTypes = [...new Set(state.allRows.map((row) => row.propertyType).filter(Boolean))].sort();
@@ -771,30 +774,30 @@ async function init() {
     applyFilters({ fitBounds: true });
   });
   map.getContainer().addEventListener("click", (event) => {
-    const popupButton = event.target.closest(".popup-favorite-button");
+    const popupButton = event.target.closest(".popup-compare-button");
     if (popupButton) {
       event.preventDefault();
-      const isNowFavorited = toggleFavoriteByBbl(popupButton.dataset.bbl);
-      popupButton.classList.toggle("is-favorited", isNowFavorited);
-      popupButton.textContent = isNowFavorited ? "Remove from Comparison" : "Include in Comparison";
+      const isNowCompared = toggleCompareByBbl(popupButton.dataset.bbl);
+      popupButton.classList.toggle("is-compared", isNowCompared);
+      popupButton.textContent = isNowCompared ? "Remove from Comparison" : "Include in Comparison";
     }
   });
-  favoritesContent.addEventListener("click", (event) => {
-    const favoriteViewButton = event.target.closest(".favorite-button");
-    if (favoriteViewButton) {
+  compareContent.addEventListener("click", (event) => {
+    const compareViewButton = event.target.closest(".compare-button");
+    if (compareViewButton) {
       event.preventDefault();
-      focusFavorite(favoriteViewButton.dataset.bbl);
+      focusCompareItem(compareViewButton.dataset.bbl);
       return;
     }
 
-    const favoriteRemoveButton = event.target.closest(".favorite-remove");
-    if (favoriteRemoveButton) {
+    const compareRemoveButton = event.target.closest(".compare-remove");
+    if (compareRemoveButton) {
       event.preventDefault();
-      toggleFavoriteByBbl(favoriteRemoveButton.dataset.bbl);
+      toggleCompareByBbl(compareRemoveButton.dataset.bbl);
     }
   });
 
-  renderFavorites();
+  renderCompareItems();
   applyFilters({ fitBounds: true });
 }
 
