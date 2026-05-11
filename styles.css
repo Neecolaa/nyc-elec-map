@@ -379,7 +379,7 @@ body {
 }
 
 .favorite-remove {
-  background: var(--accent-soft);
+  color: var(--muted);
 }
 
 .favorite-button {
@@ -390,12 +390,12 @@ body {
   margin-top: 10px;
   padding: 7px 12px;
   font-size: 0.86rem;
+  background: var(--accent-soft);
 }
 
 .popup-favorite-button.is-favorited {
-  background: var(--accent-soft);
-  color: var(--accent);
-  border-color: rgba(15, 118, 110, 0.34);
+  background: #fff;
+  color: var(--muted);
 }
 
 .detail-card {
