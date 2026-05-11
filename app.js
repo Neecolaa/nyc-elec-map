@@ -70,6 +70,7 @@ const scoreFilterValue = document.getElementById("score-filter-value");
 const scoreFilterComparison = document.getElementById("score-filter-comparison");
 const clearFiltersButton = document.getElementById("clear-filters-button");
 const categoryCheckboxes = Array.from(document.querySelectorAll('.toggle-group input[type="checkbox"]'));
+const mapElement = document.getElementById("map");
 const detailsContent = document.getElementById("details-content");
 const compareContent = document.getElementById("compare-content");
 const gradeLegend = document.getElementById("grade-legend");
@@ -455,15 +456,62 @@ function toggleCompareByBbl(bbl) {
   return existingIndex < 0;
 }
 
+function findLayerByBbl(bbl) {
+  if (viewMode.value === "ghg") {
+    let matchingLayer = null;
+    choroplethLayer.eachLayer((layer) => {
+      if (layer?.feature?.properties?.bbl === bbl) {
+        matchingLayer = layer;
+      }
+    });
+    return matchingLayer;
+  }
+
+  let matchingLayer = null;
+  layerGroup.eachLayer((layer) => {
+    if (layer?.options?.bbl === bbl) {
+      matchingLayer = layer;
+    }
+  });
+  return matchingLayer;
+}
+
 function focusCompareItem(bbl) {
   const row = getRowByBbl(bbl);
   if (!row) {
     return;
   }
   renderDetails(row);
+  mapElement?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const openMatchingPopup = () => {
+    const layer = findLayerByBbl(bbl);
+    if (layer?.openPopup) {
+      layer.openPopup();
+    }
+  };
+
   if (row.latitude !== undefined && row.longitude !== undefined) {
+    map.once("moveend", openMatchingPopup);
     map.flyTo([row.latitude, row.longitude], Math.max(map.getZoom(), 16), { duration: 0.6 });
+    return;
   }
+
+  openMatchingPopup();
+}
+
+function getCompareVisibilityState(bbl) {
+  const filters = getFilters();
+  if (filters.mode === "ghg") {
+    const featureRow = state.choroplethFeatures.find((row) => row.bbl === bbl);
+    return {
+      hidden: !featureRow || !featureMatchesFilters(featureRow, filters),
+    };
+  }
+
+  const pointRow = state.allRows.find((row) => row.bbl === bbl);
+  return {
+    hidden: !pointRow || !rowMatchesFilters(pointRow, filters),
+  };
 }
 
 function renderCompareItems() {
@@ -476,6 +524,7 @@ function renderCompareItems() {
   compareContent.className = "compare-list";
   compareContent.innerHTML = state.compareItems
     .map((item) => {
+      const visibilityState = getCompareVisibilityState(item.bbl);
       const energyEfficiency = item.lastScoredDerivedGrade
         ? `${item.lastScoredDerivedGrade} / ${item.lastScoredEnergyStarScore ?? "?"} (${item.lastScoredYear || "?"})`
         : "Not available";
@@ -499,7 +548,7 @@ function renderCompareItems() {
         : "Not available";
       return `
         <div class="compare-item">
-          <div>
+          <div class="compare-item-header">
             <p class="compare-item-title">${item.address}</p>
             <p class="compare-item-meta">${item.borough || "Unknown borough"} · BBL ${item.bbl}</p>
           </div>
@@ -519,6 +568,7 @@ function renderCompareItems() {
             </div>
           </details>
           <div class="compare-actions">
+            ${visibilityState.hidden ? '<span class="compare-hidden-badge">Hidden by current filters</span>' : ""}
             <button class="compare-button" data-bbl="${item.bbl}">Focus</button>
             <button class="compare-remove" data-bbl="${item.bbl}">Remove</button>
           </div>
@@ -673,7 +723,10 @@ function renderMap(rows) {
   choroplethLayer.clearLayers();
   map.removeLayer(choroplethLayer);
   for (const row of rows) {
-    const marker = L.circleMarker([row.latitude, row.longitude], getMarkerStyle(row));
+    const marker = L.circleMarker([row.latitude, row.longitude], {
+      ...getMarkerStyle(row),
+      bbl: row.bbl,
+    });
     marker.bindPopup(makePopupHtml(row));
     marker.on("click", () => renderDetails(row));
     marker.addTo(layerGroup);
@@ -723,6 +776,7 @@ function applyFilters({ fitBounds = false } = {}) {
   }
   state.visibleRows = visibleRows;
   state.visibleChoroplethFeatures = visibleFeatures;
+  renderCompareItems();
   if (filters.mode === "ghg") {
     renderChoropleth(visibleFeatures.map((item) => item.feature));
     updateStats(visibleFeatures);

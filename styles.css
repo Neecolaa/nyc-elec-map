@@ -381,6 +381,24 @@ body {
   font-weight: 700;
 }
 
+.compare-item-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.compare-hidden-badge {
+  flex-basis: 100%;
+  align-self: flex-start;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(138, 90, 43, 0.1);
+  color: #8a5a2b;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
 .compare-item-meta {
   margin: 4px 0 0;
   color: var(--muted);
@@ -467,6 +485,7 @@ body {
 
 .compare-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   align-items: stretch;
   margin-top: auto;
