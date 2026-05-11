@@ -378,11 +378,11 @@ body {
   border-color: rgba(15, 118, 110, 0.42);
 }
 
-.favorite-button {
+.favorite-remove {
   background: var(--accent-soft);
 }
 
-.favorite-remove {
+.favorite-button {
   color: var(--muted);
 }
 
