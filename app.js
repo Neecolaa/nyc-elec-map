@@ -67,6 +67,7 @@ const propertyTypeFilter = document.getElementById("property-type-filter");
 const scoreFilterLabel = document.getElementById("score-filter-label");
 const scoreFilterValue = document.getElementById("score-filter-value");
 const scoreFilterComparison = document.getElementById("score-filter-comparison");
+const clearFiltersButton = document.getElementById("clear-filters-button");
 const categoryCheckboxes = Array.from(document.querySelectorAll('.toggle-group input[type="checkbox"]'));
 const detailsContent = document.getElementById("details-content");
 const favoritesContent = document.getElementById("favorites-content");
@@ -288,6 +289,17 @@ function matchesScoreFilter(row, filters) {
     return rowRank <= filterRank;
   }
   return rowRank === filterRank;
+}
+
+function clearFilters() {
+  searchInput.value = "";
+  boroughFilter.value = "all";
+  propertyTypeFilter.value = "all";
+  scoreFilterValue.value = "all";
+  scoreFilterComparison.value = "exactly";
+  categoryCheckboxes.forEach((input) => {
+    input.checked = true;
+  });
 }
 
 function makePopupHtml(row) {
@@ -704,6 +716,10 @@ async function init() {
   scoreFilterValue.addEventListener("change", () => applyFilters());
   scoreFilterComparison.addEventListener("change", () => applyFilters());
   categoryCheckboxes.forEach((input) => input.addEventListener("change", () => applyFilters()));
+  clearFiltersButton.addEventListener("click", () => {
+    clearFilters();
+    applyFilters({ fitBounds: true });
+  });
   map.getContainer().addEventListener("click", (event) => {
     const popupButton = event.target.closest(".popup-favorite-button");
     if (popupButton) {
