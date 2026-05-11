@@ -317,7 +317,7 @@ function makePopupHtml(row) {
       <p class="popup-title">${row.address || row.propertyName || "Unknown address"}</p>
       <p class="popup-subtitle">${row.borough || "Unknown borough"} · ${categoryLabels[row.mapCategory]}</p>
       <p class="popup-subtitle">Grade: ${grade}</p>
-      <p class="popup-subtitle">GHG: ${ghg}</p>
+      <p class="popup-subtitle">Yearly emissions: ${ghg}</p>
       <button class="popup-compare-button ${isCompared ? "is-compared" : ""}" data-bbl="${row.bbl}">
         ${isCompared ? "Remove from Comparison" : "Include in Comparison"}
       </button>
@@ -490,7 +490,7 @@ function renderCompareItems() {
           <div class="compare-metrics">
             <div class="compare-metric"><span>Energy Efficiency Rating</span><strong>${energyEfficiency}</strong></div>
             <div class="compare-metric"><span>Property Type</span><strong>${item.propertyType || "Not available"}</strong></div>
-            <div class="compare-metric"><span>GHG Emissions</span><strong>${ghg}</strong></div>
+            <div class="compare-metric"><span>Yearly Greenhouse Gas (GHG) Emissions</span><strong>${ghg}</strong></div>
             <div class="compare-metric"><span>Est. Yearly Energy Use</span><strong>${estimatedEnergy}</strong></div>
           </div>
           <details class="details-more compare-more">
@@ -519,7 +519,7 @@ function renderDetails(row) {
     <div class="details-grid">
       <div class="detail-card"><span>Energy Efficiency Rating</span><strong>${row.lastScoredDerivedGrade ? `${row.lastScoredDerivedGrade} / ${row.lastScoredEnergyStarScore ?? "?"} (${row.lastScoredYear || "?"})` : "Not available"}</strong></div>
       <div class="detail-card"><span>Property Type</span><strong>${row.propertyType || "Not available"}</strong></div>
-      <div class="detail-card"><span>GHG Emissions</span><strong>${row.ll84TotalGhgEmissions ? formatNumber(row.ll84TotalGhgEmissions, { maximumFractionDigits: 1 }) + " tCO2e" : "Not available"}</strong></div>
+      <div class="detail-card"><span>Yearly Greenhouse Gas (GHG) Emissions</span><strong>${row.ll84TotalGhgEmissions ? formatNumber(row.ll84TotalGhgEmissions, { maximumFractionDigits: 1 }) + " tCO2e" : "Not available"}</strong></div>
       <div class="detail-card"><span>Est. Yearly Energy Use</span><strong>${row.ll84EstimatedYearlyEnergyKwh ? formatNumber(row.ll84EstimatedYearlyEnergyKwh, { maximumFractionDigits: 0 }) + " kWh" : "Not available"}</strong></div>
     </div>
     <details class="details-more">
