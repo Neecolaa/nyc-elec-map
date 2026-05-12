@@ -75,6 +75,7 @@ const mapElement = document.getElementById("map");
 const detailsContent = document.getElementById("details-content");
 const compareContent = document.getElementById("compare-content");
 const introModal = document.getElementById("intro-modal");
+const introVideoFrame = document.getElementById("intro-video-frame");
 const introCloseButton = document.getElementById("intro-close-button");
 const introDismissButton = document.getElementById("intro-dismiss-button");
 const reopenIntroButton = document.getElementById("reopen-intro-button");
@@ -217,6 +218,9 @@ function getChoroplethColor(value) {
 }
 
 function openIntroModal() {
+  if (introVideoFrame && !introVideoFrame.src) {
+    introVideoFrame.src = "https://www.youtube.com/embed/vMlyvB_DIiA";
+  }
   introModal.classList.remove("is-hidden");
   introModal.setAttribute("aria-hidden", "false");
   document.body.classList.add("modal-open");
@@ -226,6 +230,9 @@ function closeIntroModal({ remember = false } = {}) {
   introModal.classList.add("is-hidden");
   introModal.setAttribute("aria-hidden", "true");
   document.body.classList.remove("modal-open");
+  if (introVideoFrame) {
+    introVideoFrame.src = "";
+  }
   if (remember) {
     window.localStorage.setItem(INTRO_MODAL_STORAGE_KEY, "true");
   }
