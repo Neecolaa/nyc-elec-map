@@ -28,6 +28,7 @@ const state = {
 
 const COMPARE_STORAGE_KEY = "nyc-energy-map-compare-v1";
 const LEGACY_COMPARE_STORAGE_KEY = "nyc-energy-map-favorites-v1";
+const INTRO_MODAL_STORAGE_KEY = "nyc-energy-map-intro-dismissed-v1";
 
 const map = L.map("map", {
   zoomControl: false,
@@ -73,6 +74,10 @@ const categoryCheckboxes = Array.from(document.querySelectorAll('.toggle-group i
 const mapElement = document.getElementById("map");
 const detailsContent = document.getElementById("details-content");
 const compareContent = document.getElementById("compare-content");
+const introModal = document.getElementById("intro-modal");
+const introCloseButton = document.getElementById("intro-close-button");
+const introDismissButton = document.getElementById("intro-dismiss-button");
+const reopenIntroButton = document.getElementById("reopen-intro-button");
 const gradeLegend = document.getElementById("grade-legend");
 const gradeLegendNote = document.getElementById("grade-legend-note");
 const ghgLegend = document.getElementById("ghg-legend");
@@ -209,6 +214,29 @@ function getChoroplethColor(value) {
     return "#f97316";
   }
   return "#b91c1c";
+}
+
+function openIntroModal() {
+  introModal.classList.remove("is-hidden");
+  introModal.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
+}
+
+function closeIntroModal({ remember = false } = {}) {
+  introModal.classList.add("is-hidden");
+  introModal.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("modal-open");
+  if (remember) {
+    window.localStorage.setItem(INTRO_MODAL_STORAGE_KEY, "true");
+  }
+}
+
+function shouldAutoOpenIntroModal() {
+  try {
+    return window.localStorage.getItem(INTRO_MODAL_STORAGE_KEY) !== "true";
+  } catch {
+    return true;
+  }
 }
 
 function populateSelect(select, values, placeholder) {
@@ -802,6 +830,10 @@ function applyFilters({ fitBounds = false } = {}) {
 }
 
 async function init() {
+  if (shouldAutoOpenIntroModal()) {
+    openIntroModal();
+  }
+
   populateScoreFilterOptions(viewMode.value);
   renderCompareItems();
 
@@ -842,6 +874,19 @@ async function init() {
   clearFiltersButton.addEventListener("click", () => {
     clearFilters();
     applyFilters({ fitBounds: true });
+  });
+  introCloseButton.addEventListener("click", () => closeIntroModal({ remember: true }));
+  introDismissButton.addEventListener("click", () => closeIntroModal({ remember: true }));
+  reopenIntroButton.addEventListener("click", () => openIntroModal());
+  introModal.addEventListener("click", (event) => {
+    if (event.target === introModal) {
+      closeIntroModal({ remember: true });
+    }
+  });
+  window.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !introModal.classList.contains("is-hidden")) {
+      closeIntroModal({ remember: true });
+    }
   });
   map.getContainer().addEventListener("click", (event) => {
     const popupButton = event.target.closest(".popup-compare-button");

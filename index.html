@@ -19,6 +19,31 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
+    <div id="intro-modal" class="modal-backdrop is-hidden" aria-hidden="true">
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="intro-modal-title">
+        <button id="intro-close-button" class="modal-close-button" type="button" aria-label="Close introduction">
+          ×
+        </button>
+        <p class="eyebrow modal-eyebrow">About This Project</p>
+        <h2 id="intro-modal-title">Energy efficiency, emissions, and how to use this map</h2>
+        <div class="modal-video-frame">
+          <iframe
+            src="https://www.youtube.com/embed/vMlyvB_DIiA"
+            title="Project overview video"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen
+          ></iframe>
+        </div>
+        <ul class="modal-list">
+          <li>Switch between energy ratings and yearly greenhouse gas emissions using the map view menu.</li>
+          <li>Search by address, filter by borough or property type, and compare buildings side by side.</li>
+          <li>Use the map popup and details panel together to inspect scores, emissions, and energy use.</li>
+        </ul>
+        <div class="modal-actions">
+          <button id="intro-dismiss-button" class="modal-primary-button" type="button">Start exploring</button>
+        </div>
+      </div>
+    </div>
     <div class="page-shell">
       <aside class="sidebar">
         <div class="hero">
@@ -27,6 +52,7 @@
           <p class="intro">
             Explore building energy efficiency ratings and greenhouse gas emissions across New York City!
           </p>
+          <button id="reopen-intro-button" class="hero-link-button" type="button">About this project</button>
         </div>
 
         <section class="panel legend-panel">

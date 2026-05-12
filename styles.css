@@ -40,6 +40,126 @@ body {
   min-height: 100vh;
 }
 
+body.modal-open {
+  overflow: hidden;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(31, 41, 51, 0.46);
+  backdrop-filter: blur(8px);
+}
+
+.modal-card {
+  position: relative;
+  width: min(760px, 100%);
+  max-height: min(88vh, 900px);
+  overflow-y: auto;
+  padding: 28px;
+  border-radius: 24px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.modal-card h2 {
+  margin-top: 0;
+  font-family: "Fraunces", serif;
+  font-size: clamp(1.8rem, 4vw, 2.4rem);
+  line-height: 1;
+}
+
+.modal-close-button {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--muted);
+  font: inherit;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.modal-eyebrow {
+  margin-bottom: 12px;
+}
+
+.modal-intro {
+  margin: 16px 0 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.modal-video-frame {
+  margin-top: 22px;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: #000;
+  aspect-ratio: 16 / 9;
+}
+
+.modal-video-frame iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.modal-list {
+  margin: 22px 0 0;
+  padding-left: 20px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.modal-list li + li {
+  margin-top: 10px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+.modal-primary-button,
+.hero-link-button {
+  border: 1px solid rgba(15, 118, 110, 0.18);
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+
+.modal-primary-button {
+  padding: 10px 16px;
+}
+
+.hero-link-button {
+  align-self: flex-start;
+  margin-top: 16px;
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.modal-primary-button:hover,
+.hero-link-button:hover {
+  border-color: rgba(15, 118, 110, 0.42);
+}
+
 .page-shell {
   display: grid;
   grid-template-columns: 380px 1fr;
@@ -577,6 +697,15 @@ body {
 }
 
 @media (max-width: 960px) {
+  .modal-backdrop {
+    padding: 14px;
+  }
+
+  .modal-card {
+    max-height: 92vh;
+    padding: 22px 18px 20px;
+  }
+
   .page-shell {
     grid-template-columns: 1fr;
   }
